@@ -18,12 +18,12 @@ import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from
 import { getFirestore, collection, doc, getDoc, getDocs, setDoc, addDoc, deleteDoc, query, where, orderBy, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyD6dc0tbdxEsbt8KHPSAUT7HI-IMGrNZGk",
-  authDomain: "school-academic-portal.firebaseapp.com",
-  projectId: "school-academic-portal",
-  storageBucket: "school-academic-portal.firebasestorage.app",
-  messagingSenderId: "214110323862",
-  appId: "1:214110323862:web:384eea591dfbc2def86eb7"
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_PROJECT_ID.appspot.com",
+  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+  appId: "YOUR_APP_ID"
 };
 
 const app = initializeApp(firebaseConfig);
@@ -569,24 +569,18 @@ tr:hover td{background:var(--bg)}
     <div class="page active" id="page-dashboard">
       <div class="page-header">
         <h1>Dashboard Overview</h1>
-        <p id="dash-subtitle">Academic Performance Analysis</p>
+        <p>Academic Performance Analysis — Annual Exams 2025–2026</p>
       </div>
-      <div class="cards-grid" id="dash-metric-cards">
-        <div class="metric-card blue"><div class="label">Total Appeared</div><div class="value" id="dash-total">—</div><div class="sub">Grade 1–8</div></div>
-        <div class="metric-card green"><div class="label">Pass Rate (≥40%)</div><div class="value" id="dash-pct40">—</div><div class="sub">Overall</div></div>
-        <div class="metric-card amber"><div class="label">High Achievers (≥60%)</div><div class="value" id="dash-pct60">—</div><div class="sub">Overall</div></div>
-        <div class="metric-card purple"><div class="label">Overall Rating</div><div class="value" id="dash-rating" style="font-size:18px">—</div><div class="sub">Academic Year</div></div>
+      <div class="cards-grid">
+        <div class="metric-card blue"><div class="label">Total Students</div><div class="value">2,746</div><div class="sub">Grade 1–8 (with Grade 5 in Primary)</div></div>
+        <div class="metric-card green"><div class="label">Pass Rate (≥40%)</div><div class="value">95.0%</div><div class="sub">Overall</div></div>
+        <div class="metric-card amber"><div class="label">High Achievers (≥60%)</div><div class="value">74.4%</div><div class="sub">Overall</div></div>
+        <div class="metric-card purple"><div class="label">Overall Rating</div><div class="value" style="font-size:18px">Very Good</div><div class="sub">Academic Year</div></div>
       </div>
-      <div id="dash-no-data" style="background:white;border-radius:12px;padding:40px;text-align:center;border:1px dashed var(--border2);margin-bottom:20px;display:none">
-        <div style="font-size:40px;margin-bottom:12px">📂</div>
-        <h3 style="font-size:15px;color:var(--text2);margin-bottom:8px">No data for this session / exam</h3>
-        <p style="font-size:13px;color:var(--text3)">Upload an Excel file or enter data via Subject-Section Entry to see the dashboard.</p>
-        <button class="btn-add" style="margin-top:16px" onclick="showPage('upload',event)">📤 Upload Excel Data</button>
-      </div>
-      <div class="chart-grid-2" id="dash-charts-wrap">
+      <div class="chart-grid-2">
         <div class="chart-card">
           <h3>Grade-Wise Pass Rate (≥60%)</h3>
-          <div class="chart-sub" id="dash-chart-sub">All grades</div>
+          <div class="chart-sub">All grades — Annual 2025–26</div>
           <div class="chart-wrap" style="height:240px"><canvas id="chart-dash-grades"></canvas></div>
         </div>
         <div class="chart-card">
@@ -677,68 +671,51 @@ tr:hover td{background:var(--bg)}
       </div>
     </div>
 
-
-
     <!-- GRADE ANALYSIS -->
     <div class="page" id="page-grade-analysis">
       <div class="page-header">
         <h1>Grade-Wise Analysis</h1>
-        <p>Performance breakdown by grade level</p>
+        <p id="grade-analysis-subtitle">Performance breakdown by grade level</p>
       </div>
-      <div class="tabs">
-        <button class="tab active" onclick="switchTab('grade','primary',event)">Primary (Grades 1–5)</button>
-        <button class="tab" onclick="switchTab('grade','secondary',event)">Secondary (Grades 6–8)</button>
+      <div id="grade-no-data" style="display:none;padding:40px;text-align:center;background:white;border-radius:12px;border:1px dashed var(--border2)">
+        <div style="font-size:48px;margin-bottom:12px">📊</div>
+        <h3 style="color:var(--text2)">No data for this session & exam</h3>
+        <p style="color:var(--text3);margin-top:6px">Go to <b>Subject-Section Entry</b> or <b>Upload Excel</b> to add data for <span id="grade-no-data-label"></span></p>
       </div>
-      <div id="grade-primary">
-        <div class="cards-grid">
-          <div class="metric-card blue"><div class="label">Total Appeared</div><div class="value">814</div><div class="sub">Primary grades (1–5)</div></div>
-          <div class="metric-card green"><div class="label">Pass Rate ≥40%</div><div class="value">91.9%</div><div class="sub">Overall primary</div></div>
-          <div class="metric-card amber"><div class="label">High Achievers ≥60%</div><div class="value">73.5%</div><div class="sub">Overall primary</div></div>
-          <div class="metric-card purple"><div class="label">Rating</div><div class="value" style="font-size:18px">Very Good</div><div class="sub">Grades 1–5</div></div>
+      <div id="grade-has-data">
+        <div class="tabs">
+          <button class="tab active" onclick="switchTab('grade','primary',event)">Primary (Grades 1–5)</button>
+          <button class="tab" onclick="switchTab('grade','secondary',event)">Secondary (Grades 6–8)</button>
         </div>
-        <div class="chart-card">
-          <h3>Grade-Wise Performance (Grades 1–5, Primary)</h3>
-          <div class="chart-sub">Number of students securing ≥40% and ≥60% marks</div>
-          <div class="chart-wrap" style="height:280px"><canvas id="chart-primary-grades"></canvas></div>
+        <div id="grade-primary">
+          <div class="cards-grid" id="grade-primary-cards"></div>
+          <div class="chart-card">
+            <h3>Grade-Wise Performance (Grades 1–5, Primary)</h3>
+            <div class="chart-sub">Students securing ≥40% and ≥60% marks</div>
+            <div class="chart-wrap" style="height:280px"><canvas id="chart-primary-grades"></canvas></div>
+          </div>
+          <div class="table-card">
+            <div class="table-header"><h3>Primary Grades Summary</h3></div>
+            <table>
+              <thead><tr><th>Grade</th><th>Appeared</th><th>≥40% No.</th><th>≥40% %</th><th>≥60% No.</th><th>≥60% %</th><th>Rating</th></tr></thead>
+              <tbody id="grade-primary-table"></tbody>
+            </table>
+          </div>
         </div>
-        <div class="table-card">
-          <div class="table-header"><h3>Primary Grades Summary</h3></div>
-          <table>
-            <thead><tr><th>Grade</th><th>Total</th><th>Appeared</th><th>≥40% (No.)</th><th>≥40% (%)</th><th>≥60% (No.)</th><th>≥60% (%)</th><th>Rating</th></tr></thead>
-            <tbody>
-              <tr><td>Grade 1</td><td>169</td><td>163</td><td>146</td><td>89.6%</td><td>121</td><td>74.2%</td><td><span class="badge badge-verygood">Very Good</span></td></tr>
-              <tr><td>Grade 2</td><td>173</td><td>160</td><td>149</td><td>93.1%</td><td>120</td><td>75.0%</td><td><span class="badge badge-outstanding">Outstanding</span></td></tr>
-              <tr><td>Grade 3</td><td>174</td><td>163</td><td>147</td><td>90.2%</td><td>120</td><td>73.6%</td><td><span class="badge badge-verygood">Very Good</span></td></tr>
-              <tr><td>Grade 4</td><td>171</td><td>165</td><td>153</td><td>92.7%</td><td>123</td><td>74.5%</td><td><span class="badge badge-verygood">Very Good</span></td></tr>
-              <tr><td>Grade 5</td><td>163</td><td>163</td><td>148</td><td>90.8%</td><td>114</td><td>69.9%</td><td><span class="badge badge-verygood">Very Good</span></td></tr>
-              <tr style="font-weight:700;background:var(--bg)"><td>Overall</td><td>850</td><td>814</td><td>743</td><td>91.9%</td><td>598</td><td>73.5%</td><td><span class="badge badge-verygood">Very Good</span></td></tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-      <div id="grade-secondary" style="display:none">
-        <div class="cards-grid">
-          <div class="metric-card blue"><div class="label">Total Appeared</div><div class="value">668</div><div class="sub">Secondary grades (6–8)</div></div>
-          <div class="metric-card green"><div class="label">Pass Rate ≥40%</div><div class="value">98.5%</div><div class="sub">Overall secondary</div></div>
-          <div class="metric-card amber"><div class="label">High Achievers ≥60%</div><div class="value">75.0%</div><div class="sub">Overall secondary</div></div>
-          <div class="metric-card purple"><div class="label">Rating</div><div class="value" style="font-size:18px">Very Good</div><div class="sub">Grades 6–8</div></div>
-        </div>
-        <div class="chart-card">
-          <h3>Grade-Wise Performance (Grades 6–8, Secondary)</h3>
-          <div class="chart-sub">Number of students securing ≥40% and ≥60% marks</div>
-          <div class="chart-wrap" style="height:280px"><canvas id="chart-secondary-grades"></canvas></div>
-        </div>
-        <div class="table-card">
-          <div class="table-header"><h3>Secondary Grades Summary</h3></div>
-          <table>
-            <thead><tr><th>Grade</th><th>Total</th><th>Appeared</th><th>≥40% (No.)</th><th>≥40% (%)</th><th>≥60% (No.)</th><th>≥60% (%)</th><th>Rating</th></tr></thead>
-            <tbody>
-              <tr><td>Grade 6</td><td>215</td><td>227</td><td>221</td><td>97.4%</td><td>164</td><td>72.2%</td><td><span class="badge badge-verygood">Very Good</span></td></tr>
-              <tr><td>Grade 7</td><td>211</td><td>222</td><td>220</td><td>99.1%</td><td>163</td><td>73.4%</td><td><span class="badge badge-verygood">Very Good</span></td></tr>
-              <tr><td>Grade 8</td><td>222</td><td>219</td><td>218</td><td>99.5%</td><td>174</td><td>79.5%</td><td><span class="badge badge-outstanding">Outstanding</span></td></tr>
-              <tr style="font-weight:700;background:var(--bg)"><td>Overall</td><td>648</td><td>668</td><td>659</td><td>98.5%</td><td>501</td><td>75.0%</td><td><span class="badge badge-verygood">Very Good</span></td></tr>
-            </tbody>
-          </table>
+        <div id="grade-secondary" style="display:none">
+          <div class="cards-grid" id="grade-secondary-cards"></div>
+          <div class="chart-card">
+            <h3>Grade-Wise Performance (Grades 6–8, Secondary)</h3>
+            <div class="chart-sub">Students securing ≥40% and ≥60% marks</div>
+            <div class="chart-wrap" style="height:280px"><canvas id="chart-secondary-grades"></canvas></div>
+          </div>
+          <div class="table-card">
+            <div class="table-header"><h3>Secondary Grades Summary</h3></div>
+            <table>
+              <thead><tr><th>Grade</th><th>Appeared</th><th>≥40% No.</th><th>≥40% %</th><th>≥60% No.</th><th>≥60% %</th><th>Rating</th></tr></thead>
+              <tbody id="grade-secondary-table"></tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>
@@ -747,56 +724,49 @@ tr:hover td{background:var(--bg)}
     <div class="page" id="page-section-analysis">
       <div class="page-header">
         <h1>Section-Wise Analysis</h1>
-        <p>Detailed breakdown by class section</p>
+        <p id="section-analysis-subtitle">Detailed breakdown by class section</p>
       </div>
-      <div class="tabs">
-        <button class="tab active" onclick="switchTab('section','s1',event)">Grades 1–5 Sections</button>
-        <button class="tab" onclick="switchTab('section','s2',event)">Grades 6–8 Sections</button>
-        <button class="tab" onclick="switchTab('section','s3',event)">Combined Summary</button>
+      <div id="section-no-data" style="display:none;padding:40px;text-align:center;background:white;border-radius:12px;border:1px dashed var(--border2)">
+        <div style="font-size:48px;margin-bottom:12px">🗂</div>
+        <h3 style="color:var(--text2)">No section data for this session & exam</h3>
+        <p style="color:var(--text3);margin-top:6px">Add data via <b>Subject-Section Entry</b> or <b>Upload Excel</b>.</p>
       </div>
-      <div id="section-s1">
-        <div class="chart-card">
-          <h3>Section Performance — Grades 1–5 (≥60%)</h3>
-          <div class="chart-sub">Percentage of students achieving ≥60% marks per section</div>
-          <div class="chart-wrap" style="height:300px"><canvas id="chart-sec-primary"></canvas></div>
+      <div id="section-has-data">
+        <div class="tabs">
+          <button class="tab active" onclick="switchTab('section','s1',event)">Grades 1–5</button>
+          <button class="tab" onclick="switchTab('section','s2',event)">Grades 6–8</button>
+          <button class="tab" onclick="switchTab('section','s3',event)">Combined</button>
         </div>
-        <div class="table-card">
-          <div class="table-header"><h3>Primary Sections Detail</h3></div>
-          <table>
-            <thead><tr><th>Grade</th><th>Section</th><th>Type</th><th>Appeared</th><th>≥40% (No.)</th><th>≥40% (%)</th><th>≥60% (No.)</th><th>≥60% (%)</th><th>Rating</th></tr></thead>
-            <tbody id="section-primary-table"></tbody>
-          </table>
-        </div>
-      </div>
-      <div id="section-s2" style="display:none">
-        <div class="chart-card">
-          <h3>Section Performance — Grades 6–8 (≥60%)</h3>
-          <div class="chart-sub">Percentage of students achieving ≥60% marks per section (B=Boys, G=Girls)</div>
-          <div class="chart-wrap" style="height:360px"><canvas id="chart-sec-secondary"></canvas></div>
-        </div>
-        <div class="table-card">
-          <div class="table-header"><h3>Secondary Sections Detail</h3></div>
-          <table>
-            <thead><tr><th>Grade</th><th>Section</th><th>Type</th><th>Appeared</th><th>≥40% (No.)</th><th>≥40% (%)</th><th>≥60% (No.)</th><th>≥60% (%)</th><th>Rating</th></tr></thead>
-            <tbody id="section-secondary-table"></tbody>
-          </table>
-        </div>
-      </div>
-      <div id="section-s3" style="display:none">
-        <div class="cards-grid" id="combined-section-cards"></div>
-        <div class="chart-card">
-          <h3>All Sections Combined — ≥60% Achievement</h3>
-          <div class="chart-sub">Grade-level ≥60% pass rate with section breakdown</div>
-          <div class="chart-wrap" style="height:320px"><canvas id="chart-combined-section"></canvas></div>
-        </div>
-        <div class="table-card">
-          <div class="table-header"><h3>Combined Section Summary (All Grades)</h3>
-            <button class="btn-download" onclick="downloadSectionReport()">⬇ Export</button>
+        <div id="section-s1">
+          <div class="chart-card"><h3>Section Performance — Grades 1–5 (≥60%)</h3>
+            <div class="chart-wrap" style="height:300px"><canvas id="chart-sec-primary"></canvas></div>
           </div>
-          <table>
-            <thead><tr><th>Grade</th><th>Section</th><th>Type</th><th>Appeared</th><th>≥40% (No.)</th><th>≥40% (%)</th><th>≥60% (No.)</th><th>≥60% (%)</th><th>Rating</th></tr></thead>
-            <tbody id="section-combined-table"></tbody>
-          </table>
+          <div class="table-card"><div class="table-header"><h3>Primary Sections</h3></div>
+            <table><thead><tr><th>Grade</th><th>Section</th><th>Type</th><th>Appeared</th><th>≥40% No.</th><th>≥40% %</th><th>≥60% No.</th><th>≥60% %</th><th>Rating</th></tr></thead>
+            <tbody id="section-primary-table"></tbody></table>
+          </div>
+        </div>
+        <div id="section-s2" style="display:none">
+          <div class="chart-card"><h3>Section Performance — Grades 6–8 (≥60%)</h3>
+            <div class="chart-wrap" style="height:300px"><canvas id="chart-sec-secondary"></canvas></div>
+          </div>
+          <div class="table-card"><div class="table-header"><h3>Secondary Sections</h3></div>
+            <table><thead><tr><th>Grade</th><th>Section</th><th>Type</th><th>Appeared</th><th>≥40% No.</th><th>≥40% %</th><th>≥60% No.</th><th>≥60% %</th><th>Rating</th></tr></thead>
+            <tbody id="section-secondary-table"></tbody></table>
+          </div>
+        </div>
+        <div id="section-s3" style="display:none">
+          <div class="cards-grid" id="combined-section-cards"></div>
+          <div class="chart-card"><h3>All Sections — ≥60% by Grade</h3>
+            <div class="chart-wrap" style="height:300px"><canvas id="chart-combined-section"></canvas></div>
+          </div>
+          <div class="table-card">
+            <div class="table-header"><h3>All Sections Combined</h3>
+              <button class="btn-download" onclick="downloadSectionReport()">⬇ Export</button>
+            </div>
+            <table><thead><tr><th>Grade</th><th>Section</th><th>Type</th><th>Appeared</th><th>≥40% No.</th><th>≥40% %</th><th>≥60% No.</th><th>≥60% %</th><th>Rating</th></tr></thead>
+            <tbody id="section-combined-table"></tbody></table>
+          </div>
         </div>
       </div>
     </div>
@@ -805,51 +775,41 @@ tr:hover td{background:var(--bg)}
     <div class="page" id="page-gender-analysis">
       <div class="page-header">
         <h1>Gender-Wise Analysis</h1>
-        <p>Performance comparison between boys and girls</p>
+        <p id="gender-analysis-subtitle">Performance comparison between boys and girls</p>
       </div>
-      <div class="tabs">
-        <button class="tab active" onclick="switchTab('gender','gc1',event)">Primary (Grades 1–5)</button>
-        <button class="tab" onclick="switchTab('gender','gc2',event)">Secondary (Grades 6–8)</button>
+      <div id="gender-no-data" style="display:none;padding:40px;text-align:center;background:white;border-radius:12px;border:1px dashed var(--border2)">
+        <div style="font-size:48px;margin-bottom:12px">👥</div>
+        <h3 style="color:var(--text2)">No gender data available</h3>
+        <p style="color:var(--text3);margin-top:6px">Upload data with Boys/Girls sections to see gender analysis.</p>
       </div>
-      <div id="gender-gc1">
-        <div class="chart-card">
-          <h3>Boys vs Girls — ≥60% Achievement (Primary)</h3>
-          <div class="chart-sub">Percentage of boys and girls securing ≥60% marks</div>
-          <div class="chart-wrap" style="height:260px"><canvas id="chart-gender-primary"></canvas></div>
+      <div id="gender-has-data">
+        <div class="tabs">
+          <button class="tab active" onclick="switchTab('gender','gc1',event)">Primary (Grades 1–5)</button>
+          <button class="tab" onclick="switchTab('gender','gc2',event)">Secondary (Grades 6–8)</button>
         </div>
-        <div class="table-card" style="margin-top:20px">
-          <div class="table-header"><h3>Primary Gender Summary</h3></div>
-          <table>
-            <thead><tr><th>Grade</th><th>Appeared</th><th>All ≥40%</th><th>All ≥60%</th><th>Boys ≥40%</th><th>Boys ≥60%</th><th>Girls ≥40%</th><th>Girls ≥60%</th></tr></thead>
-            <tbody>
-              <tr><td>Grade 1</td><td>163</td><td>90%</td><td>74%</td><td>39%</td><td>33%</td><td>61%</td><td>52%</td></tr>
-              <tr><td>Grade 2</td><td>160</td><td>93%</td><td>75%</td><td>47%</td><td>45%</td><td>53%</td><td>55%</td></tr>
-              <tr><td>Grade 3</td><td>163</td><td>90%</td><td>74%</td><td>50%</td><td>51%</td><td>50%</td><td>49%</td></tr>
-              <tr><td>Grade 4</td><td>165</td><td>93%</td><td>75%</td><td>44%</td><td>45%</td><td>56%</td><td>55%</td></tr>
-              <tr><td>Grade 5</td><td>163</td><td>91%</td><td>70%</td><td>48%</td><td>42%</td><td>52%</td><td>58%</td></tr>
-            </tbody>
-          </table>
+        <div id="gender-gc1">
+          <div class="chart-card"><h3>Boys vs Girls — ≥60% Achievement (Primary)</h3>
+            <div class="chart-wrap" style="height:260px"><canvas id="chart-gender-primary"></canvas></div>
+          </div>
+          <div class="table-card">
+            <div class="table-header"><h3>Primary Gender Summary</h3></div>
+            <table><thead><tr><th>Grade</th><th>Appeared</th><th>All ≥40%</th><th>All ≥60%</th><th>Boys ≥60%</th><th>Girls ≥60%</th><th>Rating</th></tr></thead>
+            <tbody id="gender-primary-table"></tbody></table>
+          </div>
         </div>
-      </div>
-      <div id="gender-gc2" style="display:none">
-        <div class="chart-card">
-          <h3>Boys vs Girls — ≥60% Achievement (Secondary)</h3>
-          <div class="chart-sub">Percentage of boys and girls securing ≥60% marks</div>
-          <div class="chart-wrap" style="height:260px"><canvas id="chart-gender-secondary"></canvas></div>
-        </div>
-        <div class="table-card" style="margin-top:20px">
-          <div class="table-header"><h3>Secondary Gender Summary</h3></div>
-          <table>
-            <thead><tr><th>Grade</th><th>Appeared</th><th>All ≥40%</th><th>All ≥60%</th><th>Boys ≥40%</th><th>Boys ≥60%</th><th>Girls ≥40%</th><th>Girls ≥60%</th></tr></thead>
-            <tbody>
-              <tr><td>Grade 6</td><td>227</td><td>97%</td><td>72%</td><td>49%</td><td>46%</td><td>51%</td><td>54%</td></tr>
-              <tr><td>Grade 7</td><td>222</td><td>99%</td><td>73%</td><td>48%</td><td>45%</td><td>52%</td><td>55%</td></tr>
-              <tr><td>Grade 8</td><td>219</td><td>100%</td><td>80%</td><td>46%</td><td>44%</td><td>54%</td><td>56%</td></tr>
-            </tbody>
-          </table>
+        <div id="gender-gc2" style="display:none">
+          <div class="chart-card"><h3>Boys vs Girls — ≥60% Achievement (Secondary)</h3>
+            <div class="chart-wrap" style="height:260px"><canvas id="chart-gender-secondary"></canvas></div>
+          </div>
+          <div class="table-card">
+            <div class="table-header"><h3>Secondary Gender Summary</h3></div>
+            <table><thead><tr><th>Grade</th><th>Appeared</th><th>All ≥40%</th><th>All ≥60%</th><th>Boys ≥60%</th><th>Girls ≥60%</th><th>Rating</th></tr></thead>
+            <tbody id="gender-secondary-table"></tbody></table>
+          </div>
         </div>
       </div>
     </div>
+
 
     <!-- DEPARTMENT ANALYSIS -->
     <div class="page" id="page-dept-analysis">
@@ -1351,7 +1311,13 @@ function startApp(u){
   buildBulkGrid();
   buildStudentRows();
   renderSavedSectionsTable();
-  setTimeout(initAllCharts,100);
+  setTimeout(()=>{
+    initAllCharts();
+    // Load from localStorage on startup
+    const local=localStorage.getItem('ssData');
+    if(local){ try{ssCurrentData=JSON.parse(local);}catch(e){} }
+    renderAllAnalysis();
+  },100);
 }
 function doLogout(){
   if(window.firebaseLogout){window.firebaseLogout();}
@@ -1389,12 +1355,17 @@ function switchTab(group,id,e){
 function onSessionChange(){
   currentSession=document.getElementById('global-session').value;
   updateSessionBadge();
-  loadFirestoreDataForSession();
+  // Sync ss-session select if on subject-entry page
+  const ssEl=document.getElementById('ss-session');
+  if(ssEl) ssEl.value=currentSession;
+  loadFirestoreDataForSession().then(()=>renderAllAnalysis());
 }
 function onExamChange(){
   currentExam=document.getElementById('global-exam').value;
   updateSessionBadge();
-  loadFirestoreDataForSession();
+  const ssEl=document.getElementById('ss-exam');
+  if(ssEl) ssEl.value=currentExam;
+  renderAllAnalysis();
 }
 function updateSessionBadge(){
   const examMap={midterm1:'Mid Term 1',midterm2:'Mid Term 2',annual:'Annual Exam'};
@@ -1427,135 +1398,380 @@ function makeChart(id,type,labels,datasets,opts={}){
 }
 
 function initAllCharts(){
-  makeChart('chart-dash-grades','bar',
-    ['G1','G2','G3','G4','G5','G6','G7','G8'],
-    [{label:'≥60% Pass',data:[74.2,75,73.6,74.5,69.9,72.2,73.4,79.5],
-      backgroundColor:[BLUE,BLUE,BLUE,BLUE,BLUE,GREEN,GREEN,GREEN],borderRadius:4}],
-    {legend:false});
-  makeChart('chart-dash-cycle','doughnut',
-    ['Primary ≥60%','Secondary ≥60%','Primary <60%','Secondary <60%'],
-    [{data:[598,501,216,167],backgroundColor:[BLUE,GREEN,bg1,bg2],borderWidth:2,hoverOffset:4}]);
-
-  makeChart('chart-primary-grades','bar',
-    ['Grade 1','Grade 2','Grade 3','Grade 4','Grade 5'],
-    [
-      {label:'≥40% Marks',data:[146,149,147,153,148],backgroundColor:BLUE,borderRadius:4},
-      {label:'≥60% Marks',data:[121,120,120,123,114],backgroundColor:GREEN,borderRadius:4}
-    ]);
-  makeChart('chart-secondary-grades','bar',
-    ['Grade 6','Grade 7','Grade 8'],
-    [
-      {label:'≥40% Marks',data:[221,220,218],backgroundColor:BLUE,borderRadius:4},
-      {label:'≥60% Marks',data:[164,163,174],backgroundColor:GREEN,borderRadius:4}
-    ]);
-
-  // Section primary (now includes Grade 5)
-  const secLabels1=['G1-A','G1-B','G1-C','G1-D','G1-E','G1-F','G2-A','G2-B','G2-C','G2-D','G2-E','G2-F','G3-A','G3-B','G3-C','G3-D','G3-E','G3-F','G4-A','G4-B','G4-C','G4-D','G4-E','G4-F','G5-A','G5-B','G5-C','G5-D','G5-AB','G5-BB','G5-CB','G5-DB','G5-AG','G5-BG','G5-CG','G5-DG'];
-  const secData1=[78,71,88,100,68,43,62,70,75,73,92,80,77,93,68,69,63,71,82,82,82,79,73,61,68,72,70,69,67,64,62,64,69,69,77,73];
-  makeChart('chart-sec-primary','bar',secLabels1,
-    [{label:'≥60%',data:secData1,backgroundColor:secData1.map(v=>v>=75?GREEN:v>=60?BLUE:AMBER),borderRadius:3}],
-    {legend:false,extra:{scales:{y:{max:110}}}});
-
-  const secLabels2=['G6-AB','G6-BB','G6-CB','G6-DB','G6-AG','G6-BG','G6-CG','G6-DG','G7-AB','G7-BB','G7-CB','G7-DB','G7-AG','G7-BG','G7-CG','G7-DG','G8-AB','G8-BB','G8-CB','G8-DB','G8-AG','G8-BG','G8-CG','G8-DG'];
-  const secData2=[90,58,75,45,71,76,86,76,89,68,52,65,76,72,79,72,84,74,78,79,85,83,92,84];
-  makeChart('chart-sec-secondary','bar',secLabels2,
-    [{label:'≥60%',data:secData2,backgroundColor:secData2.map(v=>v>=75?GREEN:v>=60?BLUE:AMBER),borderRadius:3}],
-    {legend:false});
-
-  // Section tables
-  const priData=[
-    ['Grade 1','A','Mixed',27,26,96.3,21,77.8],['Grade 1','B','Mixed',28,24,85.7,20,71.4],['Grade 1','C','Mixed',25,24,96,22,88],
-    ['Grade 1','D','Mixed',27,23,85.2,27,100],['Grade 1','E','Mixed',28,26,92.9,19,67.9],['Grade 1','F','Mixed',28,23,82.1,12,42.9],
-    ['Grade 2','A','Mixed',26,24,92.3,16,61.5],['Grade 2','B','Mixed',30,28,93.3,21,70],['Grade 2','C','Mixed',28,23,82.1,21,75],
-    ['Grade 2','D','Mixed',26,25,96.2,19,73.1],['Grade 2','E','Mixed',25,24,96,23,92],['Grade 2','F','Mixed',25,25,100,20,80],
-    ['Grade 3','A','Mixed',30,28,93.3,23,76.7],['Grade 3','B','Mixed',28,27,96.4,26,92.9],['Grade 3','C','Mixed',28,25,89.3,19,67.9],
-    ['Grade 3','D','Mixed',26,22,84.6,18,69.2],['Grade 3','E','Mixed',27,25,92.6,17,63],['Grade 3','F','Mixed',24,20,83.3,17,70.8],
-    ['Grade 4','A','Mixed',28,28,100,23,82.1],['Grade 4','B','Mixed',28,27,96.4,23,82.1],['Grade 4','C','Mixed',28,26,92.9,23,82.1],
-    ['Grade 4','D','Mixed',27,24,88.9,21,77.8],['Grade 4','E','Mixed',28,26,92.9,18,64.3],['Grade 4','F','Mixed',26,22,84.6,15,57.7],
-    ['Grade 5','A','Mixed',28,27,96.4,19,67.9],['Grade 5','B','Mixed',27,25,92.6,18,66.7],['Grade 5','C','Mixed',26,25,96.2,18,69.2],['Grade 5','D','Mixed',29,28,96.6,20,69],
-    ['Grade 5','AB','Boys',15,14,93.3,10,66.7],['Grade 5','BB','Boys',14,13,92.9,9,64.3],
-    ['Grade 5','CB','Boys',13,12,92.3,8,61.5],['Grade 5','DB','Boys',14,13,92.9,9,64.3],
-    ['Grade 5','AG','Girls',13,13,100,9,69.2],['Grade 5','BG','Girls',13,12,92.3,9,69.2],
-    ['Grade 5','CG','Girls',13,13,100,10,76.9],['Grade 5','DG','Girls',15,15,100,11,73.3],
-  ];
-  const tb1=document.getElementById('section-primary-table');
-  if(tb1)tb1.innerHTML=priData.map(r=>{
-    const rt=getRatingFromCounts(r[2], Math.round(r[2]*r[4]/100), Math.round(r[2]*r[6]/100));
-    return `<tr><td>${r[0]}</td><td><span class="sec-badge">${r[1]}</span></td><td><span class="badge ${r[2]==='Boys'?'badge-primary':r[2]==='Girls'?'badge-secondary':'badge-good'}">${r[2]}</span></td><td>${r[3]}</td><td>${Math.round(r[3]*r[4]/100)}</td><td>${r[4].toFixed(1)}%</td><td>${r[5]}</td><td>${r[6].toFixed(1)}%</td><td><span class="badge ${getRating(r[4],r[6]).cls}">${getRating(r[4],r[6]).label}</span></td></tr>`;
-  }).join('');
-
-  const secDat=[
-    ['Grade 6','AB','Boys',29,28,96.6,26,90],['Grade 6','BB','Boys',26,26,100,15,58],
-    ['Grade 6','CB','Boys',28,28,100,21,75],['Grade 6','DB','Boys',29,26,89.7,13,45],
-    ['Grade 6','AG','Girls',28,28,100,20,71],['Grade 6','BG','Girls',29,28,96.6,22,76],
-    ['Grade 6','CG','Girls',29,28,96.6,25,86],['Grade 6','DG','Girls',29,29,100,22,76],
-    ['Grade 7','AB','Boys',28,26,92.9,23,82.1],['Grade 7','BB','Boys',27,25,92.6,17,63],
-    ['Grade 7','CB','Boys',28,24,85.7,15,53.6],['Grade 7','DB','Boys',26,22,84.6,16,61.5],
-    ['Grade 7','AG','Girls',29,29,100,22,75.9],['Grade 7','BG','Girls',27,27,100,19,70.4],
-    ['Grade 7','CG','Girls',28,28,100,22,78.6],['Grade 7','DG','Girls',30,30,100,22,73.3],
-    ['Grade 8','AB','Boys',27,26,96.3,22,81.5],['Grade 8','BB','Boys',28,28,100,21,75],
-    ['Grade 8','CB','Boys',27,26,96.3,21,77.8],['Grade 8','DB','Boys',27,27,100,22,81.5],
-    ['Grade 8','AG','Girls',28,27,96.4,24,85.7],['Grade 8','BG','Girls',27,27,100,22,81.5],
-    ['Grade 8','CG','Girls',29,29,100,27,93.1],['Grade 8','DG','Girls',26,26,100,22,84.6],
-  ];
-  const tb2=document.getElementById('section-secondary-table');
-  if(tb2)tb2.innerHTML=secDat.map(r=>{
-    const rt=getRating(r[5],r[7]);
-    return `<tr><td>${r[0]}</td><td><span class="sec-badge">${r[1]}</span></td><td><span class="badge ${r[2]==='Boys'?'badge-primary':'badge-secondary'}">${r[2]}</span></td><td>${r[3]}</td><td>${r[4]}</td><td>${r[5].toFixed(1)}%</td><td>${r[6]}</td><td>${r[7].toFixed(1)}%</td><td><span class="badge ${rt.cls}">${rt.label}</span></td></tr>`;
-  }).join('');
-
-  makeChart('chart-gender-primary','bar',
-    ['Grade 1','Grade 2','Grade 3','Grade 4','Grade 5'],
-    [
-      {label:'Boys ≥60%',data:[33,45,51,45,42],backgroundColor:BLUE,borderRadius:4,barThickness:18},
-      {label:'Girls ≥60%',data:[52,55,49,55,58],backgroundColor:PINK,borderRadius:4,barThickness:18}
-    ]);
-  makeChart('chart-gender-secondary','bar',
-    ['Grade 6','Grade 7','Grade 8'],
-    [
-      {label:'Boys ≥60%',data:[46,45,44],backgroundColor:BLUE,borderRadius:4,barThickness:20},
-      {label:'Girls ≥60%',data:[54,55,56],backgroundColor:PINK,borderRadius:4,barThickness:20}
-    ]);
-
-  makeChart('chart-dept','bar',
-    ['G1','G2','G3','G4','G5','G6','G7','G8'],
-    [
-      {label:'≥40%',data:[146,149,147,153,148,221,220,218],backgroundColor:BLUE,borderRadius:4},
-      {label:'≥60%',data:[121,120,120,123,114,164,163,174],backgroundColor:GREEN,borderRadius:4}
-    ]);
-
-  makeChart('chart-cohort','line',
-    ['Grade 1','Grade 2','Grade 3','Grade 4','Grade 5','Grade 6','Grade 7','Grade 8'],
-    [
-      {label:'Final 2024–25',data:[null,73,74,67,69,71,70,70],borderColor:GRAY,borderDash:[5,4],pointRadius:4,fill:false},
-      {label:'Mid Term 1',data:[66,74,63,68,72,72,71,72],borderColor:BLUE,backgroundColor:bg1,fill:false,pointRadius:4},
-      {label:'Mid Term 2',data:[69,74,66,70,60,71,73,73],borderColor:GREEN,backgroundColor:bg2,fill:false,pointRadius:4}
-    ],{max:90});
-
-  const cohortData=[
-    {label:'G1→G2',y1:73,y2:75},{label:'G2→G3',y1:74,y2:74},{label:'G3→G4',y1:67,y2:75},
-    {label:'G4→G5',y1:69,y2:70},{label:'G5→G6',y1:71,y2:72},{label:'G6→G7',y1:70,y2:73},{label:'G7→G8',y1:70,y2:80}
-  ];
-  const ca=document.getElementById('cohort-arrows');
-  if(ca)ca.innerHTML=cohortData.map(c=>{
-    const d=c.y2-c.y1,cls=d>0?'up':d<0?'down':'same',a=d>0?'↑':d<0?'↓':'→';
-    return `<div class="cohort-row"><span class="cohort-grade">${c.label}</span><span class="cohort-val ${cls}">${c.y1}%</span><span class="cohort-arrow">→</span><span class="cohort-val ${cls}">${c.y2}%</span><span class="cohort-val ${cls}">${a} ${Math.abs(d)>0?Math.abs(d)+'%':''}</span></div>`;
-  }).join('');
-
-  makeChart('chart-trends','line',
-    ['Grade 1','Grade 2','Grade 3','Grade 4','Grade 5','Grade 6','Grade 7','Grade 8'],
-    [
-      {label:'2024–2025',data:[73,74,67,69,71,70,70,74],borderColor:BLUE,backgroundColor:bg1,fill:true,tension:.35,pointRadius:5,borderWidth:2},
-      {label:'2025–2026',data:[74,75,74,75,70,72,73,80],borderColor:GREEN,backgroundColor:bg2,fill:true,tension:.35,pointRadius:5,borderWidth:2}
-    ],{max:90});
-
+  renderAllAnalysis();
   renderDeptContent('ICT');
-  renderCombinedSection();
 }
 
-// ─── COMBINED SECTION ────────────────────────────────────────────────────
-function renderCombinedSection(){
-  const allPri=[
+// ═══════════════════════════════════════════════════════════════════════
+// CORE: Render ALL analysis from ssCurrentData for current session/exam
+// ═══════════════════════════════════════════════════════════════════════
+function getSessionData(){
+  const local=localStorage.getItem('ssData');
+  if(local){ try{ ssCurrentData=JSON.parse(local); }catch(e){} }
+  return ssCurrentData.filter(r=>r.session===currentSession && r.exam===currentExam);
+}
+
+function renderAllAnalysis(){
+  const data=getSessionData();
+  const examLabel={midterm1:'Mid Term 1',midterm2:'Mid Term 2',annual:'Annual Exam'}[currentExam]||currentExam;
+  const subtitle=`${currentSession} — ${examLabel}`;
+
+  // Update all page subtitles
+  ['grade-analysis-subtitle','section-analysis-subtitle','gender-analysis-subtitle'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el) el.textContent=`${id.replace('-subtitle','').replace('-analysis','').replace('-',' ')} — ${subtitle}`;
+  });
+
+  renderDashboard(data, subtitle);
+  renderGradeAnalysis(data);
+  renderSectionAnalysis(data);
+  renderGenderAnalysis(data);
+  renderCombinedSection(data);
+  renderCohortCharts(data);
+}
+
+// ─── DASHBOARD ────────────────────────────────────────────────────────
+function renderDashboard(data, subtitle){
+  const examLabel={midterm1:'Mid Term 1',midterm2:'Mid Term 2',annual:'Annual Exam'}[currentExam]||currentExam;
+  const sub=document.querySelector('#page-dashboard .page-header p');
+  if(sub) sub.textContent=`Academic Performance Analysis — ${subtitle}`;
+
+  if(!data.length){
+    // Show empty state
+    const cards=document.querySelector('#page-dashboard .cards-grid');
+    if(cards) cards.innerHTML=`
+      <div class="metric-card blue"><div class="label">Total Appeared</div><div class="value">—</div><div class="sub">No data for ${currentSession}</div></div>
+      <div class="metric-card green"><div class="label">Pass Rate ≥40%</div><div class="value">—</div><div class="sub">Upload or enter data</div></div>
+      <div class="metric-card amber"><div class="label">High Achievers ≥60%</div><div class="value">—</div><div class="sub">No data</div></div>
+      <div class="metric-card purple"><div class="label">Overall Rating</div><div class="value" style="font-size:18px">—</div><div class="sub">No data</div></div>`;
+    destroyChart('chart-dash-grades'); destroyChart('chart-dash-cycle');
+    return;
+  }
+
+  const grades=['Grade 1','Grade 2','Grade 3','Grade 4','Grade 5','Grade 6','Grade 7','Grade 8'];
+  const gradeAgg=grades.map(g=>{
+    const secs=data.filter(r=>r.grade===g);
+    const app=secs.reduce((s,r)=>s+Number(r.appeared||0),0);
+    const p40=secs.reduce((s,r)=>s+Number(r.p40||0),0);
+    const p60=secs.reduce((s,r)=>s+Number(r.p60||0),0);
+    return{grade:g,app,p40,p60,pct40:app?p40/app*100:0,pct60:app?p60/app*100:0};
+  }).filter(g=>g.app>0);
+
+  const totalApp=gradeAgg.reduce((s,g)=>s+g.app,0);
+  const total40=gradeAgg.reduce((s,g)=>s+g.p40,0);
+  const total60=gradeAgg.reduce((s,g)=>s+g.p60,0);
+  const overallRt=totalApp?getRating(total40/totalApp*100,total60/totalApp*100):{label:'—',cls:''};
+
+  const cards=document.querySelector('#page-dashboard .cards-grid');
+  if(cards) cards.innerHTML=`
+    <div class="metric-card blue"><div class="label">Total Appeared</div><div class="value">${totalApp.toLocaleString()}</div><div class="sub">All grades — ${currentSession}</div></div>
+    <div class="metric-card green"><div class="label">Pass Rate ≥40%</div><div class="value">${totalApp?(total40/totalApp*100).toFixed(1)+'%':'—'}</div><div class="sub">Overall</div></div>
+    <div class="metric-card amber"><div class="label">High Achievers ≥60%</div><div class="value">${totalApp?(total60/totalApp*100).toFixed(1)+'%':'—'}</div><div class="sub">Overall</div></div>
+    <div class="metric-card purple"><div class="label">Overall Rating</div><div class="value" style="font-size:18px">${overallRt.label}</div><div class="sub">${examLabel} ${currentSession}</div></div>`;
+
+  const gradeLabels=gradeAgg.map(g=>g.grade.replace('Grade ','G'));
+  makeChart('chart-dash-grades','bar',gradeLabels,
+    [{label:'≥60% Pass Rate',data:gradeAgg.map(g=>+g.pct60.toFixed(1)),
+      backgroundColor:gradeAgg.map(g=>g.pct60>=75?GREEN:g.pct60>=61?BLUE:AMBER),borderRadius:4}],
+    {legend:false,extra:{scales:{y:{max:110,ticks:{callback:v=>v+'%'}}}}});
+
+  const pri=gradeAgg.filter(g=>parseInt(g.grade.split(' ')[1])<=5);
+  const sec=gradeAgg.filter(g=>parseInt(g.grade.split(' ')[1])>=6);
+  const priApp=pri.reduce((s,g)=>s+g.app,0), pri60=pri.reduce((s,g)=>s+g.p60,0);
+  const secApp=sec.reduce((s,g)=>s+g.app,0), sec60=sec.reduce((s,g)=>s+g.p60,0);
+  makeChart('chart-dash-cycle','doughnut',
+    ['Primary ≥60%','Secondary ≥60%','Primary <60%','Secondary <60%'],
+    [{data:[pri60,sec60,priApp-pri60,secApp-sec60],backgroundColor:[BLUE,GREEN,'rgba(29,92,140,0.12)','rgba(29,122,74,0.12)'],borderWidth:2,hoverOffset:4}]);
+}
+
+// ─── GRADE ANALYSIS (fully dynamic) ─────────────────────────────────
+function renderGradeAnalysis(data){
+  const noDataEl=document.getElementById('grade-no-data');
+  const hasDataEl=document.getElementById('grade-has-data');
+  const noDataLabel=document.getElementById('grade-no-data-label');
+  const examLabel={midterm1:'Mid Term 1',midterm2:'Mid Term 2',annual:'Annual Exam'}[currentExam]||currentExam;
+  if(noDataLabel) noDataLabel.textContent=`${currentSession} — ${examLabel}`;
+
+  if(!data.length){
+    if(noDataEl) noDataEl.style.display='block';
+    if(hasDataEl) hasDataEl.style.display='none';
+    return;
+  }
+  if(noDataEl) noDataEl.style.display='none';
+  if(hasDataEl) hasDataEl.style.display='block';
+
+  const grades=['Grade 1','Grade 2','Grade 3','Grade 4','Grade 5','Grade 6','Grade 7','Grade 8'];
+  const agg=grades.map(g=>{
+    const secs=data.filter(r=>r.grade===g);
+    const app=secs.reduce((s,r)=>s+Number(r.appeared||0),0);
+    const p40=secs.reduce((s,r)=>s+Number(r.p40||0),0);
+    const p60=secs.reduce((s,r)=>s+Number(r.p60||0),0);
+    return{grade:g,app,p40,p60,pct40:app?p40/app*100:0,pct60:app?p60/app*100:0,hasData:app>0};
+  });
+
+  const pri=agg.filter(g=>parseInt(g.grade.split(' ')[1])<=5&&g.hasData);
+  const sec=agg.filter(g=>parseInt(g.grade.split(' ')[1])>=6&&g.hasData);
+
+  function buildGradeTable(tbody, rows){
+    const tb=document.getElementById(tbody);
+    if(!tb) return;
+    if(!rows.length){ tb.innerHTML='<tr><td colspan="7" style="text-align:center;color:var(--text2)">No data for this session</td></tr>'; return; }
+    const totalApp=rows.reduce((s,r)=>s+r.app,0);
+    const total40=rows.reduce((s,r)=>s+r.p40,0);
+    const total60=rows.reduce((s,r)=>s+r.p60,0);
+    tb.innerHTML=rows.map(r=>{
+      const rt=r.app?getRating(r.pct40,r.pct60):{label:'—',cls:''};
+      return`<tr><td>${r.grade}</td><td>${r.app}</td><td>${r.p40}</td><td>${r.pct40.toFixed(1)}%</td><td>${r.p60}</td><td>${r.pct60.toFixed(1)}%</td><td><span class="badge ${rt.cls}">${rt.label}</span></td></tr>`;
+    }).join('')+
+    `<tr style="font-weight:700;background:var(--bg)"><td>Overall</td><td>${totalApp}</td><td>${total40}</td><td>${totalApp?(total40/totalApp*100).toFixed(1)+'%':'—'}</td><td>${total60}</td><td>${totalApp?(total60/totalApp*100).toFixed(1)+'%':'—'}</td><td><span class="badge ${getRating(totalApp?total40/totalApp*100:0,totalApp?total60/totalApp*100:0).cls}">${getRating(totalApp?total40/totalApp*100:0,totalApp?total60/totalApp*100:0).label}</span></td></tr>`;
+  }
+
+  function buildGradeCards(elId, rows, title){
+    const el=document.getElementById(elId);
+    if(!el) return;
+    const app=rows.reduce((s,r)=>s+r.app,0);
+    const p40=rows.reduce((s,r)=>s+r.p40,0);
+    const p60=rows.reduce((s,r)=>s+r.p60,0);
+    const rt=app?getRating(p40/app*100,p60/app*100):{label:'—',cls:''};
+    el.innerHTML=`
+      <div class="metric-card blue"><div class="label">Total Appeared</div><div class="value">${app.toLocaleString()}</div><div class="sub">${title}</div></div>
+      <div class="metric-card green"><div class="label">Pass Rate ≥40%</div><div class="value">${app?(p40/app*100).toFixed(1)+'%':'—'}</div><div class="sub">Overall ${title}</div></div>
+      <div class="metric-card amber"><div class="label">High Achievers ≥60%</div><div class="value">${app?(p60/app*100).toFixed(1)+'%':'—'}</div><div class="sub">Overall ${title}</div></div>
+      <div class="metric-card purple"><div class="label">Rating</div><div class="value" style="font-size:18px">${rt.label}</div><div class="sub">${title}</div></div>`;
+  }
+
+  buildGradeCards('grade-primary-cards', pri, 'Primary (Grades 1–5)');
+  buildGradeCards('grade-secondary-cards', sec, 'Secondary (Grades 6–8)');
+  buildGradeTable('grade-primary-table', pri);
+  buildGradeTable('grade-secondary-table', sec);
+
+  makeChart('chart-primary-grades','bar', pri.map(g=>g.grade),
+    [{label:'≥40% Marks',data:pri.map(g=>g.p40),backgroundColor:BLUE,borderRadius:4},
+     {label:'≥60% Marks',data:pri.map(g=>g.p60),backgroundColor:GREEN,borderRadius:4}]);
+  makeChart('chart-secondary-grades','bar', sec.map(g=>g.grade),
+    [{label:'≥40% Marks',data:sec.map(g=>g.p40),backgroundColor:BLUE,borderRadius:4},
+     {label:'≥60% Marks',data:sec.map(g=>g.p60),backgroundColor:GREEN,borderRadius:4}]);
+}
+
+// ─── SECTION ANALYSIS (fully dynamic) ────────────────────────────────
+function renderSectionAnalysis(data){
+  const noEl=document.getElementById('section-no-data');
+  const hasEl=document.getElementById('section-has-data');
+  if(!data.length){
+    if(noEl) noEl.style.display='block'; if(hasEl) hasEl.style.display='none'; return;
+  }
+  if(noEl) noEl.style.display='none'; if(hasEl) hasEl.style.display='block';
+
+  // Aggregate: average across all subjects per section
+  const sectionMap={};
+  data.forEach(r=>{
+    const key=r.grade+'||'+r.section+'||'+r.gender;
+    if(!sectionMap[key]) sectionMap[key]={grade:r.grade,section:r.section,gender:r.gender,apps:[],p40s:[],p60s:[]};
+    sectionMap[key].apps.push(Number(r.appeared||0));
+    sectionMap[key].p40s.push(Number(r.p40||0));
+    sectionMap[key].p60s.push(Number(r.p60||0));
+  });
+
+  const allSecs=Object.values(sectionMap).map(s=>{
+    const app=Math.round(s.apps.reduce((a,b)=>a+b,0)/s.apps.length);
+    const p40=Math.round(s.p40s.reduce((a,b)=>a+b,0)/s.p40s.length);
+    const p60=Math.round(s.p60s.reduce((a,b)=>a+b,0)/s.p60s.length);
+    return{grade:s.grade,section:s.section,gender:s.gender,appeared:app,p40,p60,
+      pct40:app?p40/app*100:0,pct60:app?p60/app*100:0};
+  }).sort((a,b)=>{
+    const gn=g=>parseInt(g.split(' ')[1]);
+    return gn(a.grade)-gn(b.grade)||a.section.localeCompare(b.section);
+  });
+
+  const pri=allSecs.filter(s=>parseInt(s.grade.split(' ')[1])<=5);
+  const sec=allSecs.filter(s=>parseInt(s.grade.split(' ')[1])>=6);
+
+  function secRow(r){
+    const rt=r.appeared?getRating(r.pct40,r.pct60):{label:'—',cls:''};
+    const gBadge=r.gender==='Boys'?'badge-primary':r.gender==='Girls'?'badge-secondary':'badge-good';
+    return`<tr><td>${r.grade}</td><td><span class="sec-badge">${r.section}</span></td><td><span class="badge ${gBadge}">${r.gender}</span></td><td>${r.appeared}</td><td>${r.p40}</td><td>${r.pct40.toFixed(1)}%</td><td>${r.p60}</td><td>${r.pct60.toFixed(1)}%</td><td><span class="badge ${rt.cls}">${rt.label}</span></td></tr>`;
+  }
+
+  const tb1=document.getElementById('section-primary-table');
+  if(tb1) tb1.innerHTML=pri.length?pri.map(secRow).join(''):'<tr><td colspan="9" style="text-align:center;color:var(--text2)">No primary section data</td></tr>';
+  const tb2=document.getElementById('section-secondary-table');
+  if(tb2) tb2.innerHTML=sec.length?sec.map(secRow).join(''):'<tr><td colspan="9" style="text-align:center;color:var(--text2)">No secondary section data</td></tr>';
+
+  // Charts
+  if(pri.length){
+    const labels=pri.map(s=>s.grade.replace('Grade ','G')+'-'+s.section);
+    const vals=pri.map(s=>+s.pct60.toFixed(1));
+    makeChart('chart-sec-primary','bar',labels,
+      [{label:'≥60%',data:vals,backgroundColor:vals.map(v=>v>=75?GREEN:v>=61?BLUE:AMBER),borderRadius:3}],
+      {legend:false,extra:{scales:{y:{max:110,ticks:{callback:v=>v+'%'}}}}});
+  }
+  if(sec.length){
+    const labels=sec.map(s=>s.grade.replace('Grade ','G')+'-'+s.section);
+    const vals=sec.map(s=>+s.pct60.toFixed(1));
+    makeChart('chart-sec-secondary','bar',labels,
+      [{label:'≥60%',data:vals,backgroundColor:vals.map(v=>v>=75?GREEN:v>=61?BLUE:AMBER),borderRadius:3}],
+      {legend:false,extra:{scales:{y:{max:110,ticks:{callback:v=>v+'%'}}}}});
+  }
+}
+
+// ─── GENDER ANALYSIS (fully dynamic) ─────────────────────────────────
+function renderGenderAnalysis(data){
+  const noEl=document.getElementById('gender-no-data');
+  const hasEl=document.getElementById('gender-has-data');
+  const hasGender=data.some(r=>r.gender==='Boys'||r.gender==='Girls');
+  if(!hasGender){
+    if(noEl) noEl.style.display='block'; if(hasEl) hasEl.style.display='none'; return;
+  }
+  if(noEl) noEl.style.display='none'; if(hasEl) hasEl.style.display='block';
+
+  const grades=['Grade 1','Grade 2','Grade 3','Grade 4','Grade 5','Grade 6','Grade 7','Grade 8'];
+  const gradeGender=grades.map(g=>{
+    const all=data.filter(r=>r.grade===g);
+    const boys=data.filter(r=>r.grade===g&&r.gender==='Boys');
+    const girls=data.filter(r=>r.grade===g&&r.gender==='Girls');
+    const sum=(arr,f)=>arr.reduce((s,r)=>s+Number(r[f]||0),0);
+    const app=sum(all,'appeared')||0;
+    const p40=sum(all,'p40'), p60=sum(all,'p60');
+    const bApp=sum(boys,'appeared'), bP60=sum(boys,'p60');
+    const gApp=sum(girls,'appeared'), gP60=sum(girls,'p60');
+    return{grade:g,app,p40,p60,bApp,bP60,gApp,gP60,
+      pct40:app?p40/app*100:0,pct60:app?p60/app*100:0,
+      bPct60:bApp?bP60/bApp*100:0,gPct60:gApp?gP60/gApp*100:0,hasData:app>0};
+  }).filter(g=>g.hasData);
+
+  const pri=gradeGender.filter(g=>parseInt(g.grade.split(' ')[1])<=5);
+  const sec=gradeGender.filter(g=>parseInt(g.grade.split(' ')[1])>=6);
+
+  function buildGenderTable(id, rows){
+    const tb=document.getElementById(id);
+    if(!tb) return;
+    tb.innerHTML=rows.map(r=>{
+      const rt=r.app?getRating(r.pct40,r.pct60):{label:'—',cls:''};
+      return`<tr><td>${r.grade}</td><td>${r.app}</td><td>${r.pct40.toFixed(1)}%</td><td>${r.pct60.toFixed(1)}%</td><td>${r.bPct60.toFixed(1)}%</td><td>${r.gPct60.toFixed(1)}%</td><td><span class="badge ${rt.cls}">${rt.label}</span></td></tr>`;
+    }).join('');
+  }
+
+  buildGenderTable('gender-primary-table', pri);
+  buildGenderTable('gender-secondary-table', sec);
+
+  makeChart('chart-gender-primary','bar', pri.map(g=>g.grade),
+    [{label:'Boys ≥60%',data:pri.map(g=>+g.bPct60.toFixed(1)),backgroundColor:BLUE,borderRadius:4,barThickness:18},
+     {label:'Girls ≥60%',data:pri.map(g=>+g.gPct60.toFixed(1)),backgroundColor:PINK,borderRadius:4,barThickness:18}],
+    {extra:{scales:{y:{max:110,ticks:{callback:v=>v+'%'}}}}});
+  makeChart('chart-gender-secondary','bar', sec.map(g=>g.grade),
+    [{label:'Boys ≥60%',data:sec.map(g=>+g.bPct60.toFixed(1)),backgroundColor:BLUE,borderRadius:4,barThickness:20},
+     {label:'Girls ≥60%',data:sec.map(g=>+g.gPct60.toFixed(1)),backgroundColor:PINK,borderRadius:4,barThickness:20}],
+    {extra:{scales:{y:{max:110,ticks:{callback:v=>v+'%'}}}}});
+}
+
+// ─── COHORT CHARTS (dynamic or placeholder) ───────────────────────────
+function renderCohortCharts(data){
+  // Cohort: group by grade, show exam progression within same session
+  const allSessions=JSON.parse(localStorage.getItem('ssData')||'[]');
+  const grades=['Grade 1','Grade 2','Grade 3','Grade 4','Grade 5','Grade 6','Grade 7','Grade 8'];
+  const getGradePct60=(sess,ex,grade)=>{
+    const secs=allSessions.filter(r=>r.session===sess&&r.exam===ex&&r.grade===grade);
+    const app=secs.reduce((s,r)=>s+Number(r.appeared||0),0);
+    const p60=secs.reduce((s,r)=>s+Number(r.p60||0),0);
+    return app?+(p60/app*100).toFixed(1):null;
+  };
+  const mt1=grades.map(g=>getGradePct60(currentSession,'midterm1',g));
+  const mt2=grades.map(g=>getGradePct60(currentSession,'midterm2',g));
+  const ann=grades.map(g=>getGradePct60(currentSession,'annual',g));
+  makeChart('chart-cohort','line',grades.map(g=>g.replace('Grade ','')),
+    [
+      {label:'Mid Term 1',data:mt1,borderColor:BLUE,backgroundColor:'rgba(29,92,140,0.08)',fill:false,pointRadius:4,tension:.3},
+      {label:'Mid Term 2',data:mt2,borderColor:AMBER,backgroundColor:'rgba(176,96,16,0.08)',fill:false,pointRadius:4,tension:.3},
+      {label:'Annual',data:ann,borderColor:GREEN,backgroundColor:'rgba(29,122,74,0.08)',fill:false,pointRadius:4,tension:.3}
+    ],{max:110,extra:{scales:{y:{ticks:{callback:v=>v+'%'}}}}});
+
+  // Cohort arrows
+  const ca=document.getElementById('cohort-arrows');
+  if(ca){
+    const pairs=[['G1→G2',0,1],['G2→G3',1,2],['G3→G4',2,3],['G4→G5',3,4],['G5→G6',4,5],['G6→G7',5,6],['G7→G8',6,7]];
+    const src=ann.some(v=>v!==null)?ann:mt2.some(v=>v!==null)?mt2:mt1;
+    ca.innerHTML=pairs.map(([lbl,i,j])=>{
+      const y1=src[i],y2=src[j];
+      if(y1===null||y2===null) return`<div class="cohort-row"><span class="cohort-grade">${lbl}</span><span style="color:var(--text3);font-size:12px">No data</span></div>`;
+      const d=+(y2-y1).toFixed(1),cls=d>0?'up':d<0?'down':'same',a=d>0?'↑':d<0?'↓':'→';
+      return`<div class="cohort-row"><span class="cohort-grade">${lbl}</span><span class="cohort-val ${cls}">${y1}%</span><span class="cohort-arrow">→</span><span class="cohort-val ${cls}">${y2}%</span><span class="cohort-val ${cls}">${a} ${Math.abs(d)}%</span></div>`;
+    }).join('');
+  }
+
+  // Trends chart: compare previous session to current
+  const prevSession=currentSession.replace(/(\d{4})-(\d{4})/,(m,a,b)=>`${+a-1}-${+b-1}`);
+  const examKey=currentExam;
+  const prevData=grades.map(g=>getGradePct60(prevSession,examKey,g));
+  const currData=grades.map(g=>getGradePct60(currentSession,examKey,g));
+  makeChart('chart-trends','line',grades.map(g=>g.replace('Grade ','')),
+    [
+      {label:prevSession,data:prevData,borderColor:GRAY,backgroundColor:'rgba(122,122,114,0.08)',fill:true,tension:.35,pointRadius:5,borderWidth:2,borderDash:[5,3]},
+      {label:currentSession,data:currData,borderColor:GREEN,backgroundColor:'rgba(29,122,74,0.08)',fill:true,tension:.35,pointRadius:5,borderWidth:2}
+    ],{max:110,extra:{scales:{y:{ticks:{callback:v=>v+'%'}}}}});
+
+  // Trends table
+  const tbody=document.getElementById('trends-table');
+  if(tbody){
+    tbody.innerHTML=grades.map((g,i)=>{
+      const prev=prevData[i],curr=currData[i];
+      if(curr===null) return'';
+      const d=curr-(prev||0), cls=d>0?'color:var(--green)':d<0?'color:var(--red)':'color:var(--text2)';
+      const rt=getRating(100,curr);
+      return`<tr><td>${g}</td><td>${prev!==null?prev+'%':'—'}</td><td>${curr}%</td><td style="${cls}">${d>0?'↑ +':d<0?'↓ ':''} ${Math.abs(d).toFixed(1)}%</td><td><span class="badge ${rt.cls}">${rt.label}</span></td></tr>`;
+    }).join('');
+  }
+}
+
+// ─── COMBINED SECTION (dynamic) ──────────────────────────────────────────
+function renderCombinedSection(data){
+  if(!data) data=getSessionData();
+  const allData=data;
+  if(!allData.length) return;
+
+  // Aggregate by grade+section+gender (average across subjects)
+  const sectionMap={};
+  allData.forEach(r=>{
+    const key=r.grade+'||'+r.section+'||'+r.gender;
+    if(!sectionMap[key]) sectionMap[key]={grade:r.grade,section:r.section,gender:r.gender,count:0,app:0,p40:0,p60:0};
+    sectionMap[key].count++;
+    sectionMap[key].app+=Number(r.appeared||0);
+    sectionMap[key].p40+=Number(r.p40||0);
+    sectionMap[key].p60+=Number(r.p60||0);
+  });
+  const combined=Object.values(sectionMap).map(s=>({
+    grade:s.grade,section:s.section,gender:s.gender,
+    appeared:Math.round(s.app/s.count),
+    p40:Math.round(s.p40/s.count),p60:Math.round(s.p60/s.count),
+    pct40:s.app?s.p40/s.app*100:0,pct60:s.app?s.p60/s.app*100:0
+  })).sort((a,b)=>parseInt(a.grade.split(' ')[1])-parseInt(b.grade.split(' ')[1])||a.section.localeCompare(b.section));
+
+  const totalApp=combined.reduce((s,r)=>s+r.appeared,0);
+  const total40=combined.reduce((s,r)=>s+r.p40,0);
+  const total60=combined.reduce((s,r)=>s+r.p60,0);
+  const overallRt=totalApp?getRating(total40/totalApp*100,total60/totalApp*100):{label:'—',cls:''};
+  const outstanding=combined.filter(r=>getRating(r.pct40,r.pct60).label==='Outstanding').length;
+  const weak=combined.filter(r=>getRating(r.pct40,r.pct60).label==='Weak').length;
+
+  const cc=document.getElementById('combined-section-cards');
+  if(cc) cc.innerHTML=`
+    <div class="metric-card blue"><div class="label">Total Sections</div><div class="value">${combined.length}</div><div class="sub">All grades</div></div>
+    <div class="metric-card green"><div class="label">Total Appeared</div><div class="value">${totalApp.toLocaleString()}</div><div class="sub">${totalApp?((total40/totalApp)*100).toFixed(1):'0'}% got ≥40%</div></div>
+    <div class="metric-card amber"><div class="label">High Achievers ≥60%</div><div class="value">${totalApp?((total60/totalApp)*100).toFixed(1):'0'}%</div><div class="sub">${total60} students</div></div>
+    <div class="metric-card purple"><div class="label">Overall Rating</div><div class="value" style="font-size:18px">${overallRt.label}</div><div class="sub">Outstanding:${outstanding} Weak:${weak}</div></div>`;
+
+  const tb=document.getElementById('section-combined-table');
+  if(tb) tb.innerHTML=combined.map(r=>{
+    const rt=getRating(r.pct40,r.pct60);
+    const gb=r.gender==='Boys'?'badge-primary':r.gender==='Girls'?'badge-secondary':'badge-good';
+    return`<tr><td>${r.grade}</td><td><span class="sec-badge">${r.section}</span></td><td><span class="badge ${gb}">${r.gender}</span></td><td>${r.appeared}</td><td>${r.p40}</td><td>${r.pct40.toFixed(1)}%</td><td>${r.p60}</td><td>${r.pct60.toFixed(1)}%</td><td><span class="badge ${rt.cls}">${rt.label}</span></td></tr>`;
+  }).join('');
+
+  const grades=['Grade 1','Grade 2','Grade 3','Grade 4','Grade 5','Grade 6','Grade 7','Grade 8'];
+  const gradeApp=grades.map(g=>{const rows=combined.filter(r=>r.grade===g);const app=rows.reduce((s,r)=>s+r.appeared,0);const p60=rows.reduce((s,r)=>s+r.p60,0);return app?+(p60/app*100).toFixed(1):null;});
+  makeChart('chart-combined-section','bar',grades.map(g=>g.replace('Grade ','G')),
+    [{label:'≥60% Pass Rate',data:gradeApp,backgroundColor:gradeApp.map(v=>v===null?GRAY:v>=75?GREEN:v>=61?BLUE:AMBER),borderRadius:6}],
+    {legend:false,extra:{scales:{y:{max:110,ticks:{callback:v=>v+'%'}}}}});
+}
     ['Grade 1','A','Mixed',27,26,96.3,21,77.8],['Grade 1','B','Mixed',28,24,85.7,20,71.4],['Grade 1','C','Mixed',25,24,96,22,88],
     ['Grade 1','D','Mixed',27,23,85.2,27,100],['Grade 1','E','Mixed',28,26,92.9,19,67.9],['Grade 1','F','Mixed',28,23,82.1,12,42.9],
     ['Grade 2','A','Mixed',26,24,92.3,16,61.5],['Grade 2','B','Mixed',30,28,93.3,21,70],['Grade 2','C','Mixed',28,23,82.1,21,75],
@@ -2373,17 +2589,141 @@ function handleDrop(e){
   const f=e.dataTransfer.files[0];if(f)processFile(f);
 }
 function handleFileUpload(e){const f=e.target.files[0];if(f)processFile(f);}
+
+// Smart Excel importer — converts ANY sheet layout to ssCurrentData format
 function processFile(f){
-  showToast('📊 Processing file...');
+  const session=document.getElementById('upload-session')?.value||currentSession;
+  const exam=document.getElementById('upload-exam-type')?.value||currentExam;
+  const subject=document.getElementById('upload-dept')?.value||'';
+  showToast('📊 Reading Excel file...');
   const reader=new FileReader();
   reader.onload=ev=>{
     try{
       const wb=XLSX.read(ev.target.result,{type:'binary'});
       const el=document.getElementById('upload-success');
-      el.style.display='block';
-      el.textContent=`✅ File "${f.name}" processed. ${wb.SheetNames.length} sheets found: ${wb.SheetNames.join(', ')}`;
-      showToast('File uploaded successfully!');
-    }catch(err){showToast('Error reading file: '+err.message);}
+      let importedCount=0;
+      const imported=[];
+
+      wb.SheetNames.forEach(sheetName=>{
+        const ws=wb.Sheets[sheetName];
+        const rows=XLSX.utils.sheet_to_json(ws,{header:1,defval:''});
+        if(!rows.length) return;
+
+        // Try to detect columns by header row
+        let headerRow=-1;
+        let colMap={grade:-1,section:-1,gender:-1,appeared:-1,p40:-1,p60:-1,subject:-1};
+        for(let ri=0;ri<Math.min(10,rows.length);ri++){
+          const r=rows[ri].map(c=>String(c).toLowerCase().trim());
+          const has=(kw)=>r.findIndex(c=>c.includes(kw));
+          if(has('grade')>=0||has('class')>=0){
+            headerRow=ri;
+            colMap.grade=has('grade')>=0?has('grade'):has('class');
+            colMap.section=has('section')>=0?has('section'):has('sec');
+            colMap.gender=has('gender')>=0?has('gender'):has('type');
+            // appeared: boys+girls or appeared or students
+            colMap.appeared=has('appear')>=0?has('appear'):has('total')>=0?has('total'):has('student');
+            // ≥40%: pass40 or p40 or '40'
+            colMap.p40=has('40')>=0?has('40'):has('pass')>=0?has('pass'):-1;
+            // ≥60%: p60 or 60
+            colMap.p60=has('60')>=0?has('60'):-1;
+            colMap.subject=has('subject')>=0?has('subject'):has('dept');
+            break;
+          }
+        }
+
+        // If no header detected, try to intelligently parse common formats
+        for(let ri=(headerRow>=0?headerRow+1:0);ri<rows.length;ri++){
+          const row=rows[ri];
+          if(!row||!row.some(c=>c!=='')) continue;
+
+          // Attempt to extract grade
+          let gradeVal='', secVal='', genderVal='Mixed', appearedVal=0, p40Val=0, p60Val=0, subjectVal=subject;
+
+          if(colMap.grade>=0 && row[colMap.grade]){
+            const gRaw=String(row[colMap.grade]).trim();
+            // Normalize: "1", "Grade 1", "G1", "Class 1" → "Grade 1"
+            const match=gRaw.match(/(\d)/);
+            if(match) gradeVal='Grade '+match[1];
+            else gradeVal=gRaw;
+          } else {
+            // Try first non-empty cell as grade
+            const first=row.find(c=>c!=='');
+            if(!first) continue;
+            const m=String(first).match(/\d/);
+            if(m) gradeVal='Grade '+m[0];
+          }
+
+          if(colMap.section>=0 && row[colMap.section]) secVal=String(row[colMap.section]).trim().toUpperCase();
+          else secVal=String(row[1]||'').trim().toUpperCase()||'A';
+
+          if(colMap.gender>=0 && row[colMap.gender]){
+            const gv=String(row[colMap.gender]).toLowerCase();
+            genderVal=gv.includes('boy')||gv.includes('male')?'Boys':gv.includes('girl')||gv.includes('female')?'Girls':'Mixed';
+          } else if(secVal.endsWith('B')) genderVal='Boys';
+          else if(secVal.endsWith('G')) genderVal='Girls';
+
+          if(colMap.appeared>=0) appearedVal=parseInt(row[colMap.appeared])||0;
+          else appearedVal=parseInt(row[2])||0;
+
+          if(colMap.p40>=0) p40Val=parseInt(row[colMap.p40])||0;
+          else p40Val=parseInt(row[3])||0;
+
+          if(colMap.p60>=0) p60Val=parseInt(row[colMap.p60])||0;
+          else p60Val=parseInt(row[4])||0;
+
+          if(colMap.subject>=0 && row[colMap.subject]) subjectVal=String(row[colMap.subject]).trim()||subject;
+          if(!subjectVal) subjectVal=sheetName||'Imported';
+
+          if(!gradeVal||!secVal||!appearedVal) continue;
+
+          const pct40=appearedVal?p40Val/appearedVal*100:0;
+          const pct60=appearedVal?p60Val/appearedVal*100:0;
+          const rt=getRating(pct40,pct60);
+          const id=[session,exam,subjectVal,gradeVal,secVal,genderVal].join('_').replace(/\s+/g,'');
+
+          const obj={id,session,exam,subject:subjectVal,grade:gradeVal,section:secVal,
+            gender:genderVal,appeared:appearedVal,p40:p40Val,p60:p60Val,
+            pct40,pct60,rating:rt.label,importedFrom:f.name};
+
+          // Remove any existing entry with same key
+          const idx=ssCurrentData.findIndex(r=>r.id===id||(r.session===session&&r.exam===exam&&r.subject===subjectVal&&r.grade===gradeVal&&r.section===secVal&&r.gender===genderVal));
+          if(idx>=0) ssCurrentData[idx]=obj;
+          else ssCurrentData.push(obj);
+          imported.push(obj);
+          importedCount++;
+
+          // Save to Firestore
+          if(window.saveSubjectSectionToFirestore) window.saveSubjectSectionToFirestore(obj).catch(()=>{});
+        }
+      });
+
+      localStorage.setItem('ssData',JSON.stringify(ssCurrentData));
+
+      if(el){
+        el.style.display='block';
+        el.innerHTML=importedCount>0
+          ?`✅ Imported <b>${importedCount} section records</b> from "${f.name}" into <b>${session} — ${exam}</b>.<br>
+             Subjects found: <b>${[...new Set(imported.map(r=>r.subject))].join(', ')}</b><br>
+             Grades: <b>${[...new Set(imported.map(r=>r.grade))].join(', ')}</b><br>
+             All analysis pages will now show this data.`
+          :`⚠️ File read but no recognizable data found in "${f.name}". Check the format guide below.`;
+      }
+
+      if(importedCount>0){
+        // Switch to current session if it matches
+        document.getElementById('global-session').value=session;
+        document.getElementById('global-exam').value=exam;
+        currentSession=session; currentExam=exam;
+        updateSessionBadge();
+        setTimeout(()=>renderAllAnalysis(), 200);
+        showToast(`✅ ${importedCount} sections imported from Excel!`);
+      } else {
+        showToast('⚠ No data rows found. Check format.');
+      }
+    }catch(err){
+      showToast('Error reading file: '+err.message);
+      console.error(err);
+    }
   };
   reader.readAsBinaryString(f);
 }
