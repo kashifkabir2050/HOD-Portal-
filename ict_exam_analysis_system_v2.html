@@ -1,0 +1,1117 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ICT Exam Analysis System</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --primary:#1a56db;--primary-dark:#1e40af;--primary-light:#eff6ff;
+  --success:#057a55;--success-light:#f0fdf4;
+  --warning:#b45309;--warning-light:#fffbeb;
+  --danger:#c81e1e;--danger-light:#fef2f2;
+  --sidebar-bg:#0f172a;--sidebar-text:#94a3b8;
+  --bg:#f8fafc;--card:#fff;--border:#e2e8f0;
+  --text:#0f172a;--text2:#475569;--text3:#94a3b8;
+  --font:'Segoe UI',system-ui,sans-serif;
+  --radius:8px;--radius-lg:12px;
+}
+body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:14px;min-height:100vh;display:flex}
+.app{display:flex;width:100%;min-height:100vh}
+.sidebar{width:240px;background:var(--sidebar-bg);flex-shrink:0;display:flex;flex-direction:column;height:100vh;position:sticky;top:0}
+.sidebar-logo{padding:20px 16px;border-bottom:1px solid #1e293b}
+.sidebar-logo h2{color:#fff;font-size:15px;font-weight:600}
+.sidebar-logo p{color:var(--sidebar-text);font-size:11px;margin-top:2px}
+.sidebar-nav{flex:1;padding:12px 0;overflow-y:auto}
+.nav-section{padding:8px 16px 4px;font-size:10px;font-weight:600;color:#475569;text-transform:uppercase;letter-spacing:.08em}
+.nav-item{display:flex;align-items:center;gap:8px;padding:9px 16px;cursor:pointer;color:var(--sidebar-text);font-size:13px;transition:all .15s;border-left:3px solid transparent}
+.nav-item:hover{background:#1e293b;color:#e2e8f0}
+.nav-item.active{background:#1e3a5f;color:#93c5fd;border-left-color:var(--primary)}
+.sidebar-footer{padding:12px 16px;border-top:1px solid #1e293b}
+.user-pill{display:flex;align-items:center;gap:8px;padding:8px;background:#1e293b;border-radius:var(--radius)}
+.user-pill .avatar{width:30px;height:30px;background:var(--primary);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:#fff;flex-shrink:0}
+.user-pill .info{flex:1;overflow:hidden}
+.user-pill .info .name{font-size:12px;color:#e2e8f0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.user-pill .info .role{font-size:10px;color:var(--sidebar-text)}
+.logout-btn{background:none;border:none;cursor:pointer;color:var(--sidebar-text);padding:4px;border-radius:4px;font-size:16px}
+.logout-btn:hover{color:#f87171}
+.main{flex:1;overflow:auto;display:flex;flex-direction:column;min-width:0}
+.topbar{background:var(--card);border-bottom:1px solid var(--border);padding:0 24px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10;flex-shrink:0}
+.topbar h1{font-size:16px;font-weight:600}
+.topbar-controls{display:flex;align-items:center;gap:8px}
+.select-sm{padding:6px 10px;border:1px solid var(--border);border-radius:var(--radius);font-size:13px;background:var(--card);cursor:pointer;color:var(--text);outline:none}
+.select-sm:focus{border-color:var(--primary)}
+.content{padding:20px 24px;flex:1}
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px 20px;margin-bottom:16px}
+.card-title{font-size:13px;font-weight:600;margin-bottom:12px;color:var(--text)}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.metric{background:var(--bg);border-radius:var(--radius);padding:12px 14px}
+.metric .label{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.04em}
+.metric .value{font-size:22px;font-weight:700;margin-top:2px}
+.metric .sub{font-size:11px;color:var(--text3);margin-top:2px}
+.badge{display:inline-block;padding:2px 8px;border-radius:99px;font-size:11px;font-weight:600}
+.badge-success{background:#d1fae5;color:#065f46}
+.badge-warning{background:#fef3c7;color:#92400e}
+.badge-danger{background:#fee2e2;color:#991b1b}
+.badge-info{background:#dbeafe;color:#1e40af}
+.badge-purple{background:#ede9fe;color:#5b21b6}
+.tbl-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{background:#f8fafc;padding:8px 12px;text-align:left;font-weight:600;font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:.04em;border-bottom:1px solid var(--border)}
+td{padding:9px 12px;border-bottom:1px solid #f1f5f9;color:var(--text)}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:#f8fafc}
+.form-row{display:grid;gap:12px;margin-bottom:12px}
+.form-row.cols-2{grid-template-columns:1fr 1fr}
+.form-row.cols-3{grid-template-columns:1fr 1fr 1fr}
+.form-row.cols-4{grid-template-columns:1fr 1fr 1fr 1fr}
+.form-group{display:flex;flex-direction:column;gap:4px}
+label{font-size:12px;font-weight:500;color:var(--text2)}
+input,select,textarea{padding:8px 10px;border:1px solid var(--border);border-radius:var(--radius);font-size:13px;font-family:var(--font);outline:none;background:var(--card);color:var(--text);width:100%}
+input:focus,select:focus,textarea:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(26,86,219,.08)}
+.btn{padding:8px 16px;border-radius:var(--radius);border:none;cursor:pointer;font-size:13px;font-weight:500;font-family:var(--font);transition:all .15s;display:inline-flex;align-items:center;gap:6px}
+.btn-primary{background:var(--primary);color:#fff}.btn-primary:hover{background:var(--primary-dark)}
+.btn-outline{background:#fff;color:var(--text);border:1px solid var(--border)}.btn-outline:hover{background:var(--bg)}
+.btn-success{background:#059669;color:#fff}.btn-success:hover{background:#047857}
+.btn-danger{background:#dc2626;color:#fff}.btn-danger:hover{background:#b91c1c}
+.btn-sm{padding:5px 10px;font-size:12px}
+.btn-group{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end}
+.auth-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#0f172a 0%,#1e3a5f 100%);width:100%}
+.auth-card{background:#fff;border-radius:16px;padding:36px 40px;width:400px;box-shadow:0 20px 60px rgba(0,0,0,.35)}
+.auth-logo{text-align:center;margin-bottom:28px}
+.auth-logo .logo-icon{font-size:40px;margin-bottom:8px}
+.auth-logo h2{font-size:22px;font-weight:700;color:#0f172a}
+.auth-logo p{font-size:13px;color:#64748b;margin-top:4px}
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:100;display:flex;align-items:center;justify-content:center}
+.modal{background:#fff;border-radius:var(--radius-lg);padding:24px;width:540px;max-width:95vw;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.25)}
+.modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;padding-bottom:12px;border-bottom:1px solid var(--border)}
+.modal-header h3{font-size:15px;font-weight:600}
+.modal-close{background:none;border:none;cursor:pointer;color:var(--text3);font-size:20px;line-height:1;padding:2px 6px;border-radius:4px}
+.modal-close:hover{background:var(--bg);color:var(--text)}
+.loading{display:flex;align-items:center;justify-content:center;padding:40px;color:var(--text3);gap:10px;font-size:13px}
+.spinner{width:20px;height:20px;border:2px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin .6s linear infinite;flex-shrink:0}
+@keyframes spin{to{transform:rotate(360deg)}}
+.tabs{display:flex;gap:0;border-bottom:1px solid var(--border);margin-bottom:16px;overflow-x:auto}
+.tab{padding:9px 16px;cursor:pointer;font-size:13px;color:var(--text3);border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .15s;white-space:nowrap}
+.tab.active{color:var(--primary);border-bottom-color:var(--primary);font-weight:500}
+.tab:hover:not(.active){color:var(--text)}
+.chart-box{position:relative;width:100%;height:280px;margin-top:12px}
+.alert{padding:10px 14px;border-radius:var(--radius);font-size:13px;margin-bottom:12px;display:flex;align-items:flex-start;gap:8px;line-height:1.5}
+.alert-info{background:#eff6ff;border:1px solid #bfdbfe;color:#1e40af}
+.alert-success{background:#ecfdf5;border:1px solid #a7f3d0;color:#065f46}
+.alert-danger{background:#fef2f2;border:1px solid #fecaca;color:#991b1b}
+.alert-warning{background:#fffbeb;border:1px solid #fde68a;color:#92400e}
+.entry-table input[type="number"]{padding:4px 6px;font-size:12px;width:70px}
+.entry-table td{padding:5px 8px}
+.section-tag{display:inline-block;padding:2px 7px;border-radius:4px;font-size:11px;font-weight:600;background:#f1f5f9;color:#334155}
+.stat-row{display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap}
+.stat-card{flex:1;min-width:140px;background:var(--bg);border-radius:var(--radius);padding:12px 14px;border:1px solid var(--border)}
+.stat-card .s-label{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.04em}
+.stat-card .s-val{font-size:24px;font-weight:700;margin-top:3px}
+.stat-card .s-sub{font-size:11px;color:var(--text3);margin-top:2px}
+.page-spinner{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:300px;gap:12px;color:var(--text3);font-size:13px}
+</style>
+</head>
+<body>
+<div class="app" id="app">
+  <div class="loading"><div class="spinner"></div> Connecting to Firebase...</div>
+</div>
+
+<script>
+// ─────────────────────────────────────────────
+// FIREBASE CONFIG — HARDCODED
+// ─────────────────────────────────────────────
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyD6dc0tbdxEsbt8KHPSAUT7HI-IMGrNZGk",
+  authDomain: "school-academic-portal.firebaseapp.com",
+  projectId: "school-academic-portal",
+  storageBucket: "school-academic-portal.firebasestorage.app",
+  messagingSenderId: "214110323862",
+  appId: "1:214110323862:web:384eea591dfbc2def86eb7"
+};
+
+// ─────────────────────────────────────────────
+// CONSTANTS
+// ─────────────────────────────────────────────
+const SESSIONS = ['2025-2026','2026-2027','2027-2028','2028-2029','2029-2030','2030-2031'];
+const EXAMS    = ['Mid Term 1','Mid Term 2','Final Term'];
+const PREDEFINED_DEPTS = ['ICT','Science','English','Mathematics','Arabic','Islamic Studies','Social Studies','Other Subject'];
+const SUB_SUBJECTS     = ['ICT','Urdu'];
+const GRADES = [1,2,3,4,5,6,7,8];
+const SECTIONS = {
+  1:['A','B','C','D','E','F'], 2:['A','B','C','D','E','F'],
+  3:['A','B','C','D','E','F'], 4:['A','B','C','D','E','F'],
+  5:['AB','BB','CB','DB','AG','BG','CG','DG'],
+  6:['AB','BB','CB','DB','AG','BG','CG','DG'],
+  7:['AB','BB','CB','DB','AG','BG','CG','DG'],
+  8:['AB','BB','CB','DB','AG','BG','CG','DG']
+};
+const isMale   = s => ['AB','BB','CB','DB'].includes(s);
+const isFemale = s => ['AG','BG','CG','DG'].includes(s);
+const isPrimary= g => g <= 5;
+
+// Rating criteria from image
+function getPerformanceRating(pct40, pct60) {
+  if(pct40 === null || pct40 === undefined || isNaN(pct40)) return {label:'N/A',cls:'badge-info'};
+  if(pct40 < 75)  return {label:'Weak',cls:'badge-danger'};
+  if(!pct60 || isNaN(pct60)) return {label:'Acceptable',cls:'badge-warning'};
+  if(pct60 >= 75) return {label:'Outstanding',cls:'badge-success'};
+  if(pct60 >= 61) return {label:'Very Good',cls:'badge-info'};
+  if(pct60 >= 50) return {label:'Good',cls:'badge-purple'};
+  return {label:'Acceptable',cls:'badge-warning'};
+}
+
+// ─────────────────────────────────────────────
+// APP STATE
+// ─────────────────────────────────────────────
+const S = {
+  db: null, auth: null,
+  user: null, userDoc: null,
+  page: 'dashboard',
+  session: '2025-2026',
+  exam: 'Mid Term 1',
+  modal: null,
+  departments: [...PREDEFINED_DEPTS],
+  users: [],
+  // page sub-state
+  reportTab: 'grade',
+  entryDept: 'ICT',
+  entryGrade: 1,
+  entryCache: {}
+};
+let chartReg = {};
+
+function destroyChart(id) {
+  if(chartReg[id]) { try{ chartReg[id].destroy(); }catch(e){} delete chartReg[id]; }
+}
+function mkChart(id, cfg) {
+  destroyChart(id);
+  const c = document.getElementById(id);
+  if(!c) return;
+  chartReg[id] = new Chart(c, cfg);
+}
+
+// ─────────────────────────────────────────────
+// FIREBASE INIT
+// ─────────────────────────────────────────────
+function bootFirebase() {
+  if(!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
+  S.db   = firebase.firestore();
+  S.auth = firebase.auth();
+  S.auth.onAuthStateChanged(async u => {
+    if(u) {
+      S.user = u;
+      S.userDoc = await loadUserDoc(u.uid);
+      if(!S.userDoc) S.userDoc = {name:u.email, role:'teacher', department:'ICT'};
+      // Load custom departments from Firestore
+      try {
+        const snap = await S.db.collection('settings').doc('departments').get();
+        if(snap.exists && snap.data().list) S.departments = snap.data().list;
+      } catch(e){}
+    } else { S.user = null; S.userDoc = null; }
+    render();
+  });
+}
+
+async function loadUserDoc(uid) {
+  const s = await S.db.collection('users').doc(uid).get();
+  return s.exists ? s.data() : null;
+}
+async function saveUserDoc(uid, data) {
+  await S.db.collection('users').doc(uid).set(data, {merge:true});
+}
+async function loadAllUsers() {
+  const s = await S.db.collection('users').get();
+  const r = []; s.forEach(d => r.push({id:d.id,...d.data()})); return r;
+}
+async function saveDepartments() {
+  await S.db.collection('settings').doc('departments').set({list: S.departments});
+}
+
+// ─────────────────────────────────────────────
+// MAIN RENDER
+// ─────────────────────────────────────────────
+function render() {
+  const app = document.getElementById('app');
+  if(!S.auth) { app.innerHTML='<div class="loading"><div class="spinner"></div>Connecting...</div>'; return; }
+  if(!S.user) { app.innerHTML = renderLogin(); setTimeout(bindLogin,0); return; }
+
+  const isAdmin = S.userDoc?.role === 'admin';
+  const dept = S.userDoc?.department || 'ICT';
+
+  app.innerHTML = `
+    <div class="sidebar">${renderSidebar(isAdmin,dept)}</div>
+    <div class="main">
+      <div class="topbar">
+        <h1>${pageTitle()}</h1>
+        <div class="topbar-controls">
+          <select class="select-sm" id="gSess">${SESSIONS.map(s=>`<option${s===S.session?' selected':''}>${s}</option>`).join('')}</select>
+          <select class="select-sm" id="gExam">${EXAMS.map(e=>`<option${e===S.exam?' selected':''}>${e}</option>`).join('')}</select>
+        </div>
+      </div>
+      <div class="content" id="pageContent">${renderPage(isAdmin,dept)}</div>
+    </div>
+    ${S.modal ? renderModal() : ''}
+  `;
+  bindTopbar();
+  bindSidebar();
+  setTimeout(() => { bindPage(isAdmin,dept); if(S.modal) bindModal(); }, 0);
+}
+
+function pageTitle() {
+  return {dashboard:'📊 Dashboard',dataEntry:'✏️ Data Entry',reports:'📈 Reports & Analysis',admin:'⚙️ Admin Panel',users:'👥 User Management',departments:'🏢 Departments',import:'📥 Import / Export'}[S.page] || S.page;
+}
+
+// ─────────────────────────────────────────────
+// SIDEBAR
+// ─────────────────────────────────────────────
+function renderSidebar(isAdmin, dept) {
+  const items = [
+    {id:'dashboard',icon:'📊',label:'Dashboard'},
+    {id:'dataEntry',icon:'✏️',label:'Data Entry'},
+    {id:'reports',icon:'📈',label:'Reports'},
+    {id:'import',icon:'📥',label:'Import / Export'},
+  ];
+  if(isAdmin) {
+    items.push({id:'users',icon:'👥',label:'User Management'});
+    items.push({id:'departments',icon:'🏢',label:'Departments'});
+    items.push({id:'admin',icon:'⚙️',label:'Admin Panel'});
+  }
+  const initials = (S.userDoc?.name||'U').split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
+  return `
+    <div class="sidebar-logo">
+      <h2>📚 ICT Analysis System</h2>
+      <p>School Exam Management</p>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section">Navigation</div>
+      ${items.map(i=>`<div class="nav-item${S.page===i.id?' active':''}" data-nav="${i.id}">${i.icon} ${i.label}</div>`).join('')}
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-pill">
+        <div class="avatar">${initials}</div>
+        <div class="info">
+          <div class="name">${S.userDoc?.name||S.user?.email||'User'}</div>
+          <div class="role">${S.userDoc?.role||'user'} • ${dept==='All'?'All Depts':dept}</div>
+        </div>
+        <button class="logout-btn" id="logoutBtn" title="Sign out">⏻</button>
+      </div>
+    </div>`;
+}
+function bindSidebar() {
+  document.querySelectorAll('[data-nav]').forEach(el => el.onclick = () => { S.page=el.dataset.nav; render(); });
+  const lb = document.getElementById('logoutBtn');
+  if(lb) lb.onclick = async () => { await S.auth.signOut(); };
+}
+function bindTopbar() {
+  const gs=document.getElementById('gSess'), ge=document.getElementById('gExam');
+  if(gs) gs.onchange = ()=>{ S.session=gs.value; render(); };
+  if(ge) ge.onchange = ()=>{ S.exam=ge.value; render(); };
+}
+
+// ─────────────────────────────────────────────
+// LOGIN
+// ─────────────────────────────────────────────
+function renderLogin() {
+  return `
+  <div class="auth-screen">
+    <div class="auth-card">
+      <div class="auth-logo">
+        <div class="logo-icon">📚</div>
+        <h2>ICT Exam Analysis</h2>
+        <p>School Academic Portal — ${FIREBASE_CONFIG.projectId}</p>
+      </div>
+      <div id="loginErr"></div>
+      <div class="form-group" style="margin-bottom:12px"><label>Email Address</label><input type="email" id="lEmail" placeholder="admin@school.edu" /></div>
+      <div class="form-group" style="margin-bottom:18px"><label>Password</label><input type="password" id="lPass" placeholder="••••••••" /></div>
+      <button class="btn btn-primary" id="loginBtn" style="width:100%;justify-content:center;padding:10px">Sign In</button>
+      <p style="text-align:center;margin-top:14px;font-size:12px;color:#94a3b8">
+        No account? <a href="#" id="setupLink" style="color:var(--primary);text-decoration:none">Create Admin Account</a>
+      </p>
+    </div>
+  </div>`;
+}
+function bindLogin() {
+  const doLogin = async () => {
+    const email=document.getElementById('lEmail')?.value.trim();
+    const pass =document.getElementById('lPass')?.value;
+    const errEl=document.getElementById('loginErr');
+    if(!email||!pass){ if(errEl) errEl.innerHTML=`<div class="alert alert-danger">Please enter email and password.</div>`; return; }
+    try {
+      const cred = await S.auth.signInWithEmailAndPassword(email,pass);
+      S.user = cred.user;
+      S.userDoc = await loadUserDoc(cred.user.uid);
+    } catch(e){ if(errEl) errEl.innerHTML=`<div class="alert alert-danger">⚠️ ${e.message}</div>`; }
+  };
+  document.getElementById('loginBtn')?.addEventListener('click', doLogin);
+  document.getElementById('lPass')?.addEventListener('keydown', e=>{ if(e.key==='Enter') doLogin(); });
+  document.getElementById('lEmail')?.addEventListener('keydown', e=>{ if(e.key==='Enter') document.getElementById('lPass')?.focus(); });
+  document.getElementById('setupLink')?.addEventListener('click', e=>{
+    e.preventDefault(); S.modal={type:'createAdmin'}; render();
+  });
+}
+
+// ─────────────────────────────────────────────
+// PAGE ROUTER
+// ─────────────────────────────────────────────
+function renderPage(isAdmin, dept) {
+  switch(S.page) {
+    case 'dashboard':   return renderDashboard();
+    case 'dataEntry':   return renderDataEntry(isAdmin,dept);
+    case 'reports':     return renderReports();
+    case 'import':      return renderImport();
+    case 'users':       return isAdmin ? renderUsers() : denied();
+    case 'departments': return isAdmin ? renderDepartments() : denied();
+    case 'admin':       return isAdmin ? renderAdmin() : denied();
+    default:            return renderDashboard();
+  }
+}
+function bindPage(isAdmin, dept) {
+  switch(S.page) {
+    case 'dashboard':   bindDashboard(); break;
+    case 'dataEntry':   bindDataEntry(isAdmin,dept); break;
+    case 'reports':     bindReports(isAdmin,dept); break;
+    case 'import':      bindImport(); break;
+    case 'users':       if(isAdmin) bindUsers(); break;
+    case 'departments': if(isAdmin) bindDepartments(); break;
+    case 'admin':       if(isAdmin) bindAdmin(); break;
+  }
+}
+function denied(){ return `<div class="alert alert-danger">🚫 Access denied. Admin only.</div>`; }
+
+// ─────────────────────────────────────────────
+// DASHBOARD
+// ─────────────────────────────────────────────
+function renderDashboard() {
+  const isAdmin = S.userDoc?.role==='admin';
+  const dept = isAdmin ? 'All Departments' : S.userDoc?.department;
+  return `
+  <div class="alert alert-info">📊 Session: <strong>${S.session}</strong> &nbsp;|&nbsp; Exam: <strong>${S.exam}</strong> &nbsp;|&nbsp; Scope: <strong>${dept}</strong></div>
+  <div class="stat-row">
+    <div class="stat-card"><div class="s-label">Total Appeared</div><div class="s-val" id="dm-app">—</div><div class="s-sub">students</div></div>
+    <div class="stat-card"><div class="s-label">≥40% Pass Rate</div><div class="s-val" id="dm-40" style="color:#059669">—</div><div class="s-sub">overall</div></div>
+    <div class="stat-card"><div class="s-label">≥60% Pass Rate</div><div class="s-val" id="dm-60" style="color:#1a56db">—</div><div class="s-sub">overall</div></div>
+    <div class="stat-card"><div class="s-label">Overall Rating</div><div class="s-val" id="dm-rat" style="font-size:15px;padding-top:4px">—</div></div>
+  </div>
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title">Grade-wise Pass Rate (≥60%)</div>
+      <div class="chart-box"><canvas id="dbGradeChart" role="img" aria-label="Grade wise 60% pass rate bar chart"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Primary vs Middle School</div>
+      <div class="chart-box"><canvas id="dbCycleChart" role="img" aria-label="Primary vs middle doughnut chart"></canvas></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">Grade-wise Summary — ${S.session} | ${S.exam}</div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Grade</th><th>Stage</th><th>Appeared</th><th>≥40% Count</th><th>≥40%</th><th>≥60% Count</th><th>≥60%</th><th>Rating</th></tr></thead>
+        <tbody id="dbTbody"><tr><td colspan="8"><div class="loading"><div class="spinner"></div>Loading data…</div></td></tr></tbody>
+      </table>
+    </div>
+  </div>`;
+}
+function bindDashboard() { loadDashboardData(); }
+
+async function loadDashboardData() {
+  const isAdmin = S.userDoc?.role==='admin';
+  const deptFilter = isAdmin ? null : S.userDoc?.department;
+  try {
+    let q = S.db.collection('examData').where('session','==',S.session).where('exam','==',S.exam);
+    if(deptFilter) q = q.where('department','==',deptFilter);
+    const snap = await q.get();
+    const rows = {};
+    snap.forEach(d => rows[d.id]=d.data());
+    buildDashboardUI(rows);
+  } catch(e) {
+    const tb=document.getElementById('dbTbody');
+    if(tb) tb.innerHTML=`<tr><td colspan="8" style="color:#dc2626;padding:14px">Error: ${e.message}</td></tr>`;
+  }
+}
+
+function buildDashboardUI(rows) {
+  const agg = {};
+  GRADES.forEach(g => agg[g]={appeared:0,cnt40:0,cnt60:0});
+  Object.values(rows).forEach(d => {
+    const g=parseInt(d.grade);
+    if(!agg[g]) return;
+    agg[g].appeared += +d.appeared||0;
+    agg[g].cnt40    += +d.count40||0;
+    agg[g].cnt60    += +d.count60||0;
+  });
+  let tApp=0,t40=0,t60=0;
+  GRADES.forEach(g=>{ tApp+=agg[g].appeared; t40+=agg[g].cnt40; t60+=agg[g].cnt60; });
+  const p40 = tApp?(t40/tApp*100):null;
+  const p60 = tApp?(t60/tApp*100):null;
+  const rat = getPerformanceRating(p40,p60);
+  const set = (id,v) => { const el=document.getElementById(id); if(el) el.innerHTML=v; };
+  set('dm-app', tApp||'—');
+  set('dm-40',  p40?p40.toFixed(1)+'%':'—');
+  set('dm-60',  p60?p60.toFixed(1)+'%':'—');
+  set('dm-rat', `<span class="badge ${rat.cls}">${rat.label}</span>`);
+  const tb=document.getElementById('dbTbody');
+  if(tb) tb.innerHTML = GRADES.map(g=>{
+    const d=agg[g];
+    const pp40=d.appeared?(d.cnt40/d.appeared*100):null;
+    const pp60=d.appeared?(d.cnt60/d.appeared*100):null;
+    const r=getPerformanceRating(pp40,pp60);
+    return `<tr>
+      <td><strong>Grade ${g}</strong></td>
+      <td><span class="badge ${isPrimary(g)?'badge-info':'badge-warning'}">${isPrimary(g)?'Primary':'Middle'}</span></td>
+      <td>${d.appeared||'—'}</td><td>${d.cnt40||'—'}</td>
+      <td>${pp40?pp40.toFixed(1)+'%':'—'}</td>
+      <td>${d.cnt60||'—'}</td>
+      <td>${pp60?pp60.toFixed(1)+'%':'—'}</td>
+      <td><span class="badge ${r.cls}">${r.label}</span></td>
+    </tr>`;
+  }).join('');
+  const labels = GRADES.map(g=>`G${g}`);
+  const d60 = GRADES.map(g=>agg[g].appeared?+(agg[g].cnt60/agg[g].appeared*100).toFixed(1):0);
+  const d40 = GRADES.map(g=>agg[g].appeared?+(agg[g].cnt40/agg[g].appeared*100).toFixed(1):0);
+  mkChart('dbGradeChart',{type:'bar',data:{labels,datasets:[
+    {label:'≥60%',data:d60,backgroundColor:'rgba(26,86,219,.75)',borderRadius:4},
+    {label:'≥40%',data:d40,backgroundColor:'rgba(5,122,85,.5)',borderRadius:4}
+  ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{boxWidth:12,font:{size:11}}}},scales:{y:{beginAtZero:true,max:100,ticks:{callback:v=>v+'%'}}}}});
+  const pApp=[1,2,3,4,5].reduce((s,g)=>s+agg[g].appeared,0);
+  const p60v=[1,2,3,4,5].reduce((s,g)=>s+agg[g].cnt60,0);
+  const mApp=[6,7,8].reduce((s,g)=>s+agg[g].appeared,0);
+  const m60=[6,7,8].reduce((s,g)=>s+agg[g].cnt60,0);
+  mkChart('dbCycleChart',{type:'doughnut',data:{labels:['Primary ≥60%','Primary <60%','Middle ≥60%','Middle <60%'],datasets:[{data:[p60v,Math.max(0,pApp-p60v),m60,Math.max(0,mApp-m60)],backgroundColor:['#1a56db','#bfdbfe','#059669','#a7f3d0'],borderWidth:2,hoverOffset:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{boxWidth:12,font:{size:11}}}}}});
+}
+
+// ─────────────────────────────────────────────
+// DATA ENTRY
+// ─────────────────────────────────────────────
+function renderDataEntry(isAdmin, dept) {
+  const depts = isAdmin ? S.departments : [dept];
+  const sections = SECTIONS[S.entryGrade]||[];
+  return `
+  <div class="card" style="margin-bottom:12px">
+    <div class="card-title">Select Grade & Department</div>
+    <div class="btn-group">
+      <div class="form-group"><label>Department</label>
+        <select id="eDept" style="width:160px">${depts.map(d=>`<option${d===S.entryDept?' selected':''}>${d}</option>`).join('')}</select>
+      </div>
+      <div class="form-group"><label>Grade</label>
+        <select id="eGrade" style="width:100px">${GRADES.map(g=>`<option${g===S.entryGrade?' selected':''}>${g}</option>`).join('')}</select>
+      </div>
+      <div class="form-group" style="align-self:flex-end">
+        <button class="btn btn-primary" id="loadEBtn">📂 Load Entry Form</button>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">📝 ${S.session} &nbsp;|&nbsp; ${S.exam} &nbsp;|&nbsp; ${S.entryDept} &nbsp;|&nbsp; Grade ${S.entryGrade}</div>
+    <div class="alert alert-info">Enter number of students appeared, how many scored ≥40%, and how many scored ≥60% per section. Percentages and rating update live.</div>
+    <div class="tbl-wrap entry-table">
+      <table>
+        <thead>
+          <tr><th>Section</th><th>Gender</th><th>Appeared</th><th>Count ≥40%</th><th>% ≥40%</th><th>Count ≥60%</th><th>% ≥60%</th><th>Rating</th></tr>
+        </thead>
+        <tbody>
+          ${sections.map(sec => {
+            const key = `${S.session}__${S.exam}__${S.entryDept}__${S.entryGrade}__${sec}`;
+            const sv  = S.entryCache[key]||{};
+            const gender = S.entryGrade<=4 ? 'Mixed' : (isMale(sec)?'♂ Male':'♀ Female');
+            const gCls  = gender.includes('Male')?'badge-info':gender.includes('Female')?'badge-warning':'badge-success';
+            const p40   = sv.appeared&&sv.count40 ? (sv.count40/sv.appeared*100).toFixed(1)+'%':'—';
+            const p60   = sv.appeared&&sv.count60 ? (sv.count60/sv.appeared*100).toFixed(1)+'%':'—';
+            const r     = sv.appeared ? getPerformanceRating(sv.appeared?(sv.count40/sv.appeared*100):null, sv.appeared?(sv.count60/sv.appeared*100):null) : {label:'—',cls:'badge-info'};
+            return `<tr data-key="${key}">
+              <td><span class="section-tag">${sec}</span></td>
+              <td><span class="badge ${gCls}">${gender}</span></td>
+              <td><input type="number" min="0" class="eApp" data-key="${key}" value="${sv.appeared||''}" placeholder="0" /></td>
+              <td><input type="number" min="0" class="e40"  data-key="${key}" value="${sv.count40||''}" placeholder="0" /></td>
+              <td class="ep40_${key}">${p40}</td>
+              <td><input type="number" min="0" class="e60"  data-key="${key}" value="${sv.count60||''}" placeholder="0" /></td>
+              <td class="ep60_${key}">${p60}</td>
+              <td class="erat_${key}"><span class="badge ${r.cls}">${r.label}</span></td>
+            </tr>`;
+          }).join('')}
+        </tbody>
+      </table>
+    </div>
+    <div class="btn-group" style="margin-top:14px">
+      <button class="btn btn-success" id="saveEBtn">💾 Save All Sections</button>
+      <button class="btn btn-outline" id="clearEBtn">🗑️ Clear Form</button>
+    </div>
+    <div id="eMsg"></div>
+  </div>`;
+}
+
+function bindDataEntry(isAdmin, dept) {
+  document.getElementById('loadEBtn')?.addEventListener('click', async () => {
+    S.entryDept  = document.getElementById('eDept').value;
+    S.entryGrade = parseInt(document.getElementById('eGrade').value);
+    S.entryCache = {};
+    // Load existing from Firestore
+    try {
+      const snap = await S.db.collection('examData')
+        .where('session','==',S.session).where('exam','==',S.exam)
+        .where('department','==',S.entryDept).where('grade','==',S.entryGrade).get();
+      snap.forEach(d => { S.entryCache[d.id]=d.data(); });
+    } catch(e){}
+    render();
+  });
+
+  // Live recalc
+  document.querySelectorAll('.eApp,.e40,.e60').forEach(inp => {
+    inp.addEventListener('input', () => {
+      const key = inp.dataset.key;
+      const row = inp.closest('tr');
+      if(!row) return;
+      const app = +row.querySelector('.eApp').value||0;
+      const c40 = +row.querySelector('.e40').value||0;
+      const c60 = +row.querySelector('.e60').value||0;
+      const p40 = app?(c40/app*100):null;
+      const p60 = app?(c60/app*100):null;
+      const el40 = document.querySelector(`.ep40_${key}`);
+      const el60 = document.querySelector(`.ep60_${key}`);
+      const elR  = document.querySelector(`.erat_${key}`);
+      if(el40) el40.textContent = p40?p40.toFixed(1)+'%':'—';
+      if(el60) el60.textContent = p60?p60.toFixed(1)+'%':'—';
+      const r = getPerformanceRating(p40,p60);
+      if(elR) elR.innerHTML = `<span class="badge ${r.cls}">${r.label}</span>`;
+    });
+  });
+
+  document.getElementById('saveEBtn')?.addEventListener('click', async () => {
+    const sections = SECTIONS[S.entryGrade]||[];
+    const batch = S.db.batch();
+    let n=0;
+    for(const sec of sections) {
+      const key = `${S.session}__${S.exam}__${S.entryDept}__${S.entryGrade}__${sec}`;
+      const row = document.querySelector(`tr[data-key="${key}"]`);
+      if(!row) continue;
+      const app = parseInt(row.querySelector('.eApp').value)||0;
+      const c40 = parseInt(row.querySelector('.e40').value)||0;
+      const c60 = parseInt(row.querySelector('.e60').value)||0;
+      if(!app) continue;
+      const ref = S.db.collection('examData').doc(key);
+      batch.set(ref,{session:S.session,exam:S.exam,department:S.entryDept,grade:S.entryGrade,section:sec,appeared:app,count40:c40,count60:c60,pct40:app?c40/app*100:0,pct60:app?c60/app*100:0,updatedAt:new Date().toISOString()},{merge:true});
+      n++;
+    }
+    const msg = document.getElementById('eMsg');
+    try {
+      await batch.commit();
+      if(msg) msg.innerHTML=`<div class="alert alert-success" style="margin-top:10px">✅ Saved ${n} section(s) successfully!</div>`;
+    } catch(e){ if(msg) msg.innerHTML=`<div class="alert alert-danger" style="margin-top:10px">❌ ${e.message}</div>`; }
+  });
+
+  document.getElementById('clearEBtn')?.addEventListener('click', () => {
+    document.querySelectorAll('.eApp,.e40,.e60').forEach(i=>i.value='');
+    document.querySelectorAll('[class*="ep40_"],[class*="ep60_"]').forEach(el=>el.textContent='—');
+    document.querySelectorAll('[class*="erat_"]').forEach(el=>el.innerHTML='<span class="badge badge-info">—</span>');
+  });
+}
+
+// ─────────────────────────────────────────────
+// REPORTS
+// ─────────────────────────────────────────────
+function renderReports() {
+  const tabs=[{id:'grade',l:'Grade-wise'},{id:'gender',l:'Gender-wise'},{id:'cohort',l:'Cohort Progress'},{id:'trends',l:'Trends'},{id:'dept',l:'By Department'}];
+  return `
+  <div class="tabs">${tabs.map(t=>`<div class="tab${S.reportTab===t.id?' active':''}" data-rtab="${t.id}">${t.l}</div>`).join('')}</div>
+  <div id="rBody">${renderReportBody()}</div>
+  <div class="card">
+    <div class="card-title">📥 Export Reports</div>
+    <div class="btn-group">
+      <button class="btn btn-outline" id="dlPdf">📄 Download PDF Report</button>
+      <button class="btn btn-outline" id="dlXls">📊 Download Excel Report</button>
+    </div>
+  </div>`;
+}
+function renderReportBody() {
+  switch(S.reportTab) {
+    case 'grade': return `<div class="card"><div class="card-title">Grade-wise Performance Analysis</div><div id="gradeRpt"><div class="loading"><div class="spinner"></div>Loading…</div></div><div class="chart-box"><canvas id="rGradeChart" role="img" aria-label="Grade performance"></canvas></div></div>`;
+    case 'gender': return `<div class="card"><div class="card-title">Gender-wise Analysis</div><div id="genderRpt"><div class="loading"><div class="spinner"></div>Loading…</div></div><div class="chart-box"><canvas id="rGenderChart" role="img" aria-label="Gender analysis"></canvas></div></div>`;
+    case 'cohort': return `<div class="card"><div class="card-title">Cohort Progress — All 3 Exams (${S.session})</div><div id="cohortRpt"><div class="loading"><div class="spinner"></div>Loading…</div></div><div class="chart-box"><canvas id="rCohortChart" role="img" aria-label="Cohort progress"></canvas></div></div>`;
+    case 'trends': return `<div class="card"><div class="card-title">Trends Over Sessions (Final Term)</div><div id="trendsRpt"><div class="loading"><div class="spinner"></div>Loading…</div></div><div class="chart-box"><canvas id="rTrendsChart" role="img" aria-label="Trends"></canvas></div></div>`;
+    case 'dept':   return `<div class="card"><div class="card-title">Department-wise Summary</div><div id="deptRpt"><div class="loading"><div class="spinner"></div>Loading…</div></div><div class="chart-box"><canvas id="rDeptChart" role="img" aria-label="Dept summary"></canvas></div></div>`;
+    default: return '';
+  }
+}
+function bindReports(isAdmin, dept) {
+  document.querySelectorAll('[data-rtab]').forEach(el => el.onclick=()=>{ S.reportTab=el.dataset.rtab; render(); });
+  const deptFilter = isAdmin?null:dept;
+  switch(S.reportTab) {
+    case 'grade':  loadGradeReport(deptFilter); break;
+    case 'gender': loadGenderReport(deptFilter); break;
+    case 'cohort': loadCohortReport(deptFilter); break;
+    case 'trends': loadTrendsReport(deptFilter); break;
+    case 'dept':   loadDeptReport(); break;
+  }
+  document.getElementById('dlPdf')?.addEventListener('click', dlPDF);
+  document.getElementById('dlXls')?.addEventListener('click', dlExcel);
+}
+
+async function fetchExamData(session, exam, dept) {
+  let q = S.db.collection('examData').where('session','==',session).where('exam','==',exam);
+  if(dept) q = q.where('department','==',dept);
+  const snap = await q.get();
+  const r={}; snap.forEach(d=>r[d.id]=d.data()); return r;
+}
+function gradeAgg(rows) {
+  const a={}; GRADES.forEach(g=>a[g]={appeared:0,cnt40:0,cnt60:0});
+  Object.values(rows).forEach(d=>{const g=parseInt(d.grade);if(a[g]){a[g].appeared+=+d.appeared||0;a[g].cnt40+=+d.count40||0;a[g].cnt60+=+d.count60||0;}});
+  return a;
+}
+
+async function loadGradeReport(dept) {
+  const rows = await fetchExamData(S.session,S.exam,dept);
+  const agg  = gradeAgg(rows);
+  const el   = document.getElementById('gradeRpt'); if(!el) return;
+  el.innerHTML=`<div class="tbl-wrap"><table><thead><tr><th>Grade</th><th>Stage</th><th>Appeared</th><th>≥40%</th><th>% ≥40%</th><th>≥60%</th><th>% ≥60%</th><th>Rating</th></tr></thead><tbody>
+    ${GRADES.map(g=>{const d=agg[g];const p40=d.appeared?(d.cnt40/d.appeared*100):null;const p60=d.appeared?(d.cnt60/d.appeared*100):null;const r=getPerformanceRating(p40,p60);
+    return `<tr><td>Grade ${g}</td><td><span class="badge ${isPrimary(g)?'badge-info':'badge-warning'}">${isPrimary(g)?'Primary':'Middle'}</span></td><td>${d.appeared||0}</td><td>${d.cnt40||0}</td><td>${p40?p40.toFixed(1)+'%':'—'}</td><td>${d.cnt60||0}</td><td>${p60?p60.toFixed(1)+'%':'—'}</td><td><span class="badge ${r.cls}">${r.label}</span></td></tr>`;
+    }).join('')}
+  </tbody></table></div>`;
+  mkChart('rGradeChart',{type:'bar',data:{labels:GRADES.map(g=>`Grade ${g}`),datasets:[
+    {label:'≥60%',data:GRADES.map(g=>agg[g].appeared?+(agg[g].cnt60/agg[g].appeared*100).toFixed(1):0),backgroundColor:GRADES.map(g=>isPrimary(g)?'rgba(26,86,219,.75)':'rgba(5,122,85,.75)'),borderRadius:4},
+    {label:'≥40%',data:GRADES.map(g=>agg[g].appeared?+(agg[g].cnt40/agg[g].appeared*100).toFixed(1):0),backgroundColor:'rgba(180,83,9,.35)',borderRadius:4}
+  ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{boxWidth:12,font:{size:11}}}},scales:{y:{beginAtZero:true,max:100,ticks:{callback:v=>v+'%'}}}}});
+}
+
+async function loadGenderReport(dept) {
+  const rows=await fetchExamData(S.session,S.exam,dept);
+  const agg={}; GRADES.forEach(g=>agg[g]={mApp:0,fApp:0,m60:0,f60:0,m40:0,f40:0});
+  Object.values(rows).forEach(d=>{
+    const g=parseInt(d.grade),s=d.section;
+    if(!agg[g]) return;
+    if(g<=4){agg[g].mApp+=+d.appeared/2||0;agg[g].fApp+=+d.appeared/2||0;agg[g].m60+=+d.count60/2||0;agg[g].f60+=+d.count60/2||0;}
+    else if(isMale(s)){agg[g].mApp+=+d.appeared||0;agg[g].m60+=+d.count60||0;agg[g].m40+=+d.count40||0;}
+    else if(isFemale(s)){agg[g].fApp+=+d.appeared||0;agg[g].f60+=+d.count60||0;agg[g].f40+=+d.count40||0;}
+  });
+  const el=document.getElementById('genderRpt'); if(!el) return;
+  el.innerHTML=`<div class="tbl-wrap"><table><thead><tr><th>Grade</th><th>Boys App.</th><th>Boys ≥60%</th><th>Boys %</th><th>Girls App.</th><th>Girls ≥60%</th><th>Girls %</th></tr></thead><tbody>
+    ${GRADES.map(g=>{const d=agg[g];const mp=d.mApp?(d.m60/d.mApp*100):null;const fp=d.fApp?(d.f60/d.fApp*100):null;
+    return `<tr><td>Grade ${g}</td><td>${Math.round(d.mApp)}</td><td>${Math.round(d.m60)}</td><td>${mp?mp.toFixed(1)+'%':'—'}</td><td>${Math.round(d.fApp)}</td><td>${Math.round(d.f60)}</td><td>${fp?fp.toFixed(1)+'%':'—'}</td></tr>`;
+    }).join('')}
+  </tbody></table></div>`;
+  mkChart('rGenderChart',{type:'bar',data:{labels:GRADES.map(g=>`G${g}`),datasets:[
+    {label:'Boys ≥60%',data:GRADES.map(g=>agg[g].mApp?+(agg[g].m60/agg[g].mApp*100).toFixed(1):0),backgroundColor:'rgba(26,86,219,.75)',borderRadius:4},
+    {label:'Girls ≥60%',data:GRADES.map(g=>agg[g].fApp?+(agg[g].f60/agg[g].fApp*100).toFixed(1):0),backgroundColor:'rgba(217,70,128,.75)',borderRadius:4}
+  ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{boxWidth:12,font:{size:11}}}},scales:{y:{beginAtZero:true,max:100,ticks:{callback:v=>v+'%'}}}}});
+}
+
+async function loadCohortReport(dept) {
+  const aggs={};
+  for(const ex of EXAMS){ aggs[ex]=gradeAgg(await fetchExamData(S.session,ex,dept)); }
+  const el=document.getElementById('cohortRpt'); if(!el) return;
+  el.innerHTML=`<div class="tbl-wrap"><table><thead><tr><th>Grade</th>${EXAMS.map(e=>`<th>${e} ≥60%</th>`).join('')}<th>Trend</th></tr></thead><tbody>
+    ${GRADES.map(g=>{
+      const vals=EXAMS.map(e=>{const a=aggs[e][g];return a.appeared?(a.cnt60/a.appeared*100):null;});
+      const trend=vals[2]!==null&&vals[0]!==null?(vals[2]-vals[0]>1?'📈 Improving':vals[2]-vals[0]<-1?'📉 Declining':'➡️ Stable'):'—';
+      return `<tr><td>Grade ${g}</td>${vals.map(v=>`<td>${v?v.toFixed(1)+'%':'—'}</td>`).join('')}<td>${trend}</td></tr>`;
+    }).join('')}
+  </tbody></table></div>`;
+  mkChart('rCohortChart',{type:'line',data:{labels:GRADES.map(g=>`G${g}`),datasets:EXAMS.map((e,i)=>({
+    label:e,data:GRADES.map(g=>{const a=aggs[e][g];return a.appeared?+(a.cnt60/a.appeared*100).toFixed(1):null;}),
+    borderColor:['#1a56db','#059669','#d97706'][i],backgroundColor:'transparent',tension:.35,pointRadius:5,pointHoverRadius:7
+  }))},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{boxWidth:12,font:{size:11}}}},scales:{y:{beginAtZero:true,max:100,ticks:{callback:v=>v+'%'}}}}});
+}
+
+async function loadTrendsReport(dept) {
+  const showSess=SESSIONS.slice(0,4);
+  const aggs={};
+  for(const s of showSess){ aggs[s]=gradeAgg(await fetchExamData(s,'Final Term',dept)); }
+  const el=document.getElementById('trendsRpt'); if(!el) return;
+  el.innerHTML=`<div class="tbl-wrap"><table><thead><tr><th>Grade</th>${showSess.map(s=>`<th>${s}</th>`).join('')}</tr></thead><tbody>
+    ${GRADES.map(g=>`<tr><td>Grade ${g}</td>${showSess.map(s=>{const a=aggs[s][g];const p=a.appeared?(a.cnt60/a.appeared*100):null;return `<td>${p?p.toFixed(1)+'%':'—'}</td>`;}).join('')}</tr>`).join('')}
+  </tbody></table></div>`;
+  const colors=['#1a56db','#059669','#d97706','#7c3aed'];
+  mkChart('rTrendsChart',{type:'line',data:{labels:GRADES.map(g=>`G${g}`),datasets:showSess.map((s,i)=>({
+    label:s,data:GRADES.map(g=>{const a=aggs[s][g];return a.appeared?+(a.cnt60/a.appeared*100).toFixed(1):null;}),
+    borderColor:colors[i],backgroundColor:'transparent',tension:.35,pointRadius:4
+  }))},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{boxWidth:12,font:{size:11}}}},scales:{y:{beginAtZero:true,max:100,ticks:{callback:v=>v+'%'}}}}});
+}
+
+async function loadDeptReport() {
+  const snap=await S.db.collection('examData').where('session','==',S.session).where('exam','==',S.exam).get();
+  const da={};
+  snap.forEach(d=>{const dd=d.data();const dep=dd.department||'Unknown';if(!da[dep])da[dep]={appeared:0,cnt40:0,cnt60:0};da[dep].appeared+=+dd.appeared||0;da[dep].cnt40+=+dd.count40||0;da[dep].cnt60+=+dd.count60||0;});
+  const el=document.getElementById('deptRpt'); if(!el) return;
+  const deps=Object.keys(da);
+  el.innerHTML=`<div class="tbl-wrap"><table><thead><tr><th>Department</th><th>Appeared</th><th>≥40%</th><th>% ≥40%</th><th>≥60%</th><th>% ≥60%</th><th>Rating</th></tr></thead><tbody>
+    ${deps.map(d=>{const a=da[d];const p40=a.appeared?(a.cnt40/a.appeared*100):null;const p60=a.appeared?(a.cnt60/a.appeared*100):null;const r=getPerformanceRating(p40,p60);
+    return `<tr><td><strong>${d}</strong></td><td>${a.appeared}</td><td>${a.cnt40}</td><td>${p40?p40.toFixed(1)+'%':'—'}</td><td>${a.cnt60}</td><td>${p60?p60.toFixed(1)+'%':'—'}</td><td><span class="badge ${r.cls}">${r.label}</span></td></tr>`;
+    }).join('')}
+  </tbody></table></div>`;
+  mkChart('rDeptChart',{type:'bar',data:{labels:deps,datasets:[{label:'≥60% Pass Rate',data:deps.map(d=>da[d].appeared?+(da[d].cnt60/da[d].appeared*100).toFixed(1):0),backgroundColor:'rgba(26,86,219,.75)',borderRadius:4}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{beginAtZero:true,max:100,ticks:{callback:v=>v+'%'}}}}});
+}
+
+// ─────────────────────────────────────────────
+// DOWNLOAD REPORTS
+// ─────────────────────────────────────────────
+async function dlPDF() {
+  const {jsPDF}=window.jspdf;
+  const doc=new jsPDF();
+  const snap=await S.db.collection('examData').where('session','==',S.session).where('exam','==',S.exam).get();
+  const agg={}; GRADES.forEach(g=>agg[g]={appeared:0,cnt40:0,cnt60:0});
+  snap.forEach(d=>{const dd=d.data();const g=parseInt(dd.grade);if(agg[g]){agg[g].appeared+=+dd.appeared||0;agg[g].cnt40+=+dd.count40||0;agg[g].cnt60+=+dd.count60||0;}});
+  doc.setFontSize(16); doc.setFont(undefined,'bold');
+  doc.text('ICT Exam Analysis Report',105,18,{align:'center'});
+  doc.setFontSize(10); doc.setFont(undefined,'normal');
+  doc.text(`Session: ${S.session}  |  Exam: ${S.exam}  |  Generated: ${new Date().toLocaleDateString()}`,105,26,{align:'center'});
+  doc.setDrawColor(200); doc.line(14,30,196,30);
+  doc.setFontSize(12); doc.setFont(undefined,'bold'); doc.text('Grade-wise Summary',14,40);
+  doc.setFontSize(9); doc.setFont(undefined,'bold');
+  const cols=['Grade','Stage','Appeared','Cnt ≥40%','% ≥40%','Cnt ≥60%','% ≥60%','Rating'];
+  const cw=[22,20,22,22,18,22,18,26];
+  let x=14; cols.forEach((c,i)=>{doc.text(c,x,50);x+=cw[i];});
+  doc.line(14,52,196,52); doc.setFont(undefined,'normal');
+  let y=58;
+  GRADES.forEach(g=>{
+    const d=agg[g];
+    const p40=d.appeared?(d.cnt40/d.appeared*100):0;
+    const p60=d.appeared?(d.cnt60/d.appeared*100):0;
+    const r=getPerformanceRating(p40,p60);
+    const row=[`Grade ${g}`,isPrimary(g)?'Primary':'Middle',''+d.appeared,''+d.cnt40,p40.toFixed(1)+'%',''+d.cnt60,p60.toFixed(1)+'%',r.label];
+    x=14; row.forEach((c,i)=>{doc.text(c,x,y);x+=cw[i];});
+    y+=7;
+  });
+  doc.setFont(undefined,'italic'); doc.setFontSize(8);
+  doc.text('Rating Criteria: Weak(<75% get 40%) | Acceptable(≥75% get 40%) | Good(50-60% get 60%) | Very Good(61-74% get 60%) | Outstanding(≥75% get 60%)',14,y+8,{maxWidth:180});
+  doc.save(`ICT_${S.session}_${S.exam.replace(/ /g,'_')}.pdf`);
+}
+
+async function dlExcel() {
+  const snap=await S.db.collection('examData').where('session','==',S.session).where('exam','==',S.exam).get();
+  const agg={}; GRADES.forEach(g=>agg[g]={appeared:0,cnt40:0,cnt60:0});
+  const details=[];
+  snap.forEach(d=>{const dd=d.data();const g=parseInt(dd.grade);if(agg[g]){agg[g].appeared+=+dd.appeared||0;agg[g].cnt40+=+dd.count40||0;agg[g].cnt60+=+dd.count60||0;}
+    details.push([dd.session,dd.exam,dd.department,`Grade ${dd.grade}`,dd.section,dd.appeared,dd.count40,dd.count60,dd.pct40?dd.pct40.toFixed(1)+'%':'—',dd.pct60?dd.pct60.toFixed(1)+'%':'—']);
+  });
+  const wb=XLSX.utils.book_new();
+  // Summary sheet
+  const sumData=[
+    ['ICT Exam Analysis Report'],
+    [`Session: ${S.session}  |  Exam: ${S.exam}  |  Generated: ${new Date().toLocaleDateString()}`],
+    [],
+    ['Grade','Stage','Appeared','Count ≥40%','% ≥40%','Count ≥60%','% ≥60%','Rating'],
+    ...GRADES.map(g=>{const d=agg[g];const p40=d.appeared?(d.cnt40/d.appeared*100):0;const p60=d.appeared?(d.cnt60/d.appeared*100):0;const r=getPerformanceRating(p40,p60);return [`Grade ${g}`,isPrimary(g)?'Primary':'Middle',d.appeared,d.cnt40,p40.toFixed(1)+'%',d.cnt60,p60.toFixed(1)+'%',r.label];})
+  ];
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(sumData), 'Summary');
+  // Detail sheet
+  const detData=[['Session','Exam','Department','Grade','Section','Appeared','Count ≥40%','Count ≥60%','% ≥40%','% ≥60%'],...details];
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(detData), 'Detail Data');
+  XLSX.writeFile(wb,`ICT_${S.session}_${S.exam.replace(/ /g,'_')}.xlsx`);
+}
+
+// ─────────────────────────────────────────────
+// IMPORT / EXPORT
+// ─────────────────────────────────────────────
+function renderImport() {
+  return `
+  <div class="card">
+    <div class="card-title">📋 Download Import Template</div>
+    <p style="font-size:13px;color:var(--text2);margin-bottom:12px">Download this Excel template, fill in your data, then upload below. One row per section.</p>
+    <button class="btn btn-outline" id="dlTpl">📥 Download Excel Template</button>
+  </div>
+  <div class="card">
+    <div class="card-title">📤 Upload & Import Data</div>
+    <div class="form-row cols-3">
+      <div class="form-group"><label>Session</label><select id="impSess">${SESSIONS.map(s=>`<option>${s}</option>`).join('')}</select></div>
+      <div class="form-group"><label>Exam</label><select id="impExam">${EXAMS.map(e=>`<option>${e}</option>`).join('')}</select></div>
+      <div class="form-group"><label>Department</label><select id="impDept">${S.departments.map(d=>`<option>${d}</option>`).join('')}</select></div>
+    </div>
+    <div class="form-group" style="margin-bottom:14px"><label>Select Excel File (.xlsx / .xls)</label><input type="file" id="impFile" accept=".xlsx,.xls" /></div>
+    <button class="btn btn-primary" id="impBtn">📤 Import Data to Firebase</button>
+    <div id="impMsg"></div>
+  </div>`;
+}
+function bindImport() {
+  document.getElementById('dlTpl')?.addEventListener('click',()=>{
+    const rows=[
+      ['ICT Exam Data Import Template — School Academic Portal'],
+      ['Instructions: Fill one row per section. Do NOT change column headers. Save as .xlsx'],
+      [],
+      ['Session','Exam','Department','Grade','Section','Appeared','Count_40Plus','Count_60Plus'],
+      ...GRADES.flatMap(g=>(SECTIONS[g]||[]).map(s=>[S.session,'Mid Term 1','ICT',g,s,'','','']))
+    ];
+    const wb=XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(rows),'Data');
+    XLSX.writeFile(wb,'ICT_Import_Template.xlsx');
+  });
+  document.getElementById('impBtn')?.addEventListener('click',()=>{
+    const file=document.getElementById('impFile')?.files[0];
+    if(!file){alert('Please select a file.'); return;}
+    const sess=document.getElementById('impSess').value;
+    const exam=document.getElementById('impExam').value;
+    const dept=document.getElementById('impDept').value;
+    const reader=new FileReader();
+    reader.onload=async e=>{
+      try{
+        const wb=XLSX.read(e.target.result,{type:'binary'});
+        const ws=wb.Sheets[wb.SheetNames[0]];
+        const rows=XLSX.utils.sheet_to_json(ws,{header:1});
+        const hIdx=rows.findIndex(r=>Array.isArray(r)&&(r[0]==='Session'||r[3]==='Grade'));
+        const data=rows.slice(hIdx+1).filter(r=>r[3]&&r[4]);
+        const batch=S.db.batch(); let n=0;
+        data.forEach(r=>{
+          const g=parseInt(r[3]);const sec=String(r[4]);
+          const app=parseInt(r[5])||0;const c40=parseInt(r[6])||0;const c60=parseInt(r[7])||0;
+          if(!g||!sec||!app) return;
+          const key=`${sess}__${exam}__${dept}__${g}__${sec}`;
+          batch.set(S.db.collection('examData').doc(key),{session:sess,exam,department:dept,grade:g,section:sec,appeared:app,count40:c40,count60:c60,pct40:app?c40/app*100:0,pct60:app?c60/app*100:0,updatedAt:new Date().toISOString()},{merge:true});
+          n++;
+        });
+        await batch.commit();
+        document.getElementById('impMsg').innerHTML=`<div class="alert alert-success" style="margin-top:10px">✅ Imported ${n} records successfully!</div>`;
+      }catch(err){document.getElementById('impMsg').innerHTML=`<div class="alert alert-danger" style="margin-top:10px">❌ ${err.message}</div>`;}
+    };
+    reader.readAsBinaryString(file);
+  });
+}
+
+// ─────────────────────────────────────────────
+// USER MANAGEMENT
+// ─────────────────────────────────────────────
+function renderUsers() {
+  return `
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+    <h2 style="font-size:15px;font-weight:600">All Users</h2>
+    <button class="btn btn-primary btn-sm" id="addUBtn">+ Add User</button>
+  </div>
+  <div class="card">
+    <div id="usersTbl"><div class="loading"><div class="spinner"></div>Loading users…</div></div>
+  </div>`;
+}
+function bindUsers() {
+  refreshUserTable();
+  document.getElementById('addUBtn')?.addEventListener('click',()=>{ S.modal={type:'addUser'}; render(); });
+}
+async function refreshUserTable() {
+  try {
+    const users=await loadAllUsers(); S.users=users;
+    const el=document.getElementById('usersTbl'); if(!el) return;
+    if(!users.length){el.innerHTML='<p style="color:var(--text3);padding:16px">No users yet. Create your first user above.</p>';return;}
+    el.innerHTML=`<div class="tbl-wrap"><table>
+      <thead><tr><th>Name</th><th>Email</th><th>Emp ID</th><th>Role</th><th>Department</th><th>Actions</th></tr></thead>
+      <tbody>${users.map(u=>`<tr>
+        <td><strong>${u.name||'—'}</strong></td><td style="color:var(--text2)">${u.email||'—'}</td>
+        <td style="color:var(--text3);font-size:12px">${u.employeeId||'—'}</td>
+        <td><span class="badge ${u.role==='admin'?'badge-danger':'badge-info'}">${u.role||'teacher'}</span></td>
+        <td>${u.department||'—'}</td>
+        <td style="display:flex;gap:6px">
+          <button class="btn btn-outline btn-sm euBtn" data-id="${u.id}">✏️ Edit</button>
+          <button class="btn btn-danger btn-sm duBtn" data-id="${u.id}">🗑️</button>
+        </td>
+      </tr>`).join('')}</tbody>
+    </table></div>`;
+    document.querySelectorAll('.euBtn').forEach(b=>b.onclick=()=>{ const u=S.users.find(x=>x.id===b.dataset.id); S.modal={type:'editUser',user:u}; render(); });
+    document.querySelectorAll('.duBtn').forEach(b=>b.onclick=async()=>{
+      if(confirm('Delete this user record? (Firebase Auth account remains)')){
+        await S.db.collection('users').doc(b.dataset.id).delete(); refreshUserTable();
+      }
+    });
+  }catch(e){console.error(e);}
+}
+
+// ─────────────────────────────────────────────
+// DEPARTMENTS
+// ─────────────────────────────────────────────
+function renderDepartments() {
+  return `
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+    <h2 style="font-size:15px;font-weight:600">Departments</h2>
+    <button class="btn btn-primary btn-sm" id="addDBtn">+ Add Department</button>
+  </div>
+  <div class="card">
+    <div class="tbl-wrap"><table>
+      <thead><tr><th>Department Name</th><th>Type</th><th>Actions</th></tr></thead>
+      <tbody>${S.departments.map((d,i)=>`<tr>
+        <td><strong>${d}</strong></td>
+        <td><span class="badge ${SUB_SUBJECTS.includes(d)?'badge-purple':'badge-info'}">${SUB_SUBJECTS.includes(d)?'Sub-Subject':'Main Dept'}</span></td>
+        <td><button class="btn btn-danger btn-sm dDept" data-i="${i}">🗑️ Remove</button></td>
+      </tr>`).join('')}</tbody>
+    </table></div>
+  </div>`;
+}
+function bindDepartments() {
+  document.getElementById('addDBtn')?.addEventListener('click',()=>{ S.modal={type:'addDept'}; render(); });
+  document.querySelectorAll('.dDept').forEach(b=>b.onclick=async()=>{
+    const name=S.departments[parseInt(b.dataset.i)];
+    if(confirm(`Remove "${name}"?`)){ S.departments.splice(parseInt(b.dataset.i),1); await saveDepartments(); render(); }
+  });
+}
+
+// ─────────────────────────────────────────────
+// ADMIN PANEL
+// ─────────────────────────────────────────────
+function renderAdmin() {
+  return `
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title">➕ Create New User Account</div>
+      <div id="acMsg"></div>
+      <div class="form-row cols-2">
+        <div class="form-group"><label>Full Name *</label><input id="acName" placeholder="e.g. Ahmed Ali" /></div>
+        <div class="form-group"><label>Employee ID</label><input id="acEmp" placeholder="EMP-001" /></div>
+      </div>
+      <div class="form-group" style="margin-bottom:10px"><label>Email Address *</label><input type="email" id="acEmail" placeholder="teacher@school.edu" /></div>
+      <div class="form-row cols-2">
+        <div class="form-group"><label>Password *</label><input type="password" id="acPass" placeholder="Min 6 characters" /></div>
+        <div class="form-group"><label>Role</label>
+          <select id="acRole"><option value="teacher">Teacher / HOD</option><option value="admin">Administrator</option></select>
+        </div>
+      </div>
+      <div class="form-group" style="margin-bottom:14px"><label>Assigned Department</label>
+        <select id="acDept">${S.departments.map(d=>`<option>${d}</option>`).join('')}</select>
+      </div>
+      <button class="btn btn-primary" id="acBtn">➕ Create Account</button>
+    </div>
+    <div class="card">
+      <div class="card-title">📊 System Overview</div>
+      <div id="adStats"><div class="loading"><div class="spinner"></div>Loading…</div></div>
+      <div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--border)">
+        <div class="card-title" style="margin-bottom:8px">🔥 Firebase Project</div>
+        <p style="font-size:12px;color:var(--text2)">Project: <strong>${FIREBASE_CONFIG.projectId}</strong></p>
+        <p style="font-size:12px;color:var(--text2);margin-top:4px">Auth Domain: <strong>${FIREBASE_CONFIG.authDomain}</strong></p>
+      </div>
+    </div>
+  </div>`;
+}
+function bindAdmin() {
+  loadAdminStats();
+  document.getElementById('acBtn')?.addEventListener('click', async ()=>{
+    const name=document.getElementById('acName').value.trim();
+    const emp =document.getElementById('acEmp').value.trim();
+    const email=document.getElementById('acEmail').value.trim();
+    const pass=document.getElementById('acPass').value;
+    const role=document.getElementById('acRole').value;
+    const dept=document.getElementById('acDept').value;
+    const msg=document.getElementById('acMsg');
+    if(!name||!email||!pass){if(msg)msg.innerHTML='<div class="alert alert-danger">Name, email and password are required.</div>';return;}
+    try{
+      const cred=await S.auth.createUserWithEmailAndPassword(email,pass);
+      await saveUserDoc(cred.user.uid,{name,employeeId:emp,email,role,department:dept,createdAt:new Date().toISOString()});
+      if(msg)msg.innerHTML=`<div class="alert alert-success">✅ Account created for <strong>${name}</strong> (${dept})</div>`;
+      ['acName','acEmp','acEmail','acPass'].forEach(id=>{ const el=document.getElementById(id); if(el)el.value=''; });
+      loadAdminStats();
+    }catch(e){if(msg)msg.innerHTML=`<div class="alert alert-danger">❌ ${e.message}</div>`;}
+  });
+}
+async function loadAdminStats() {
+  try{
+    const users=await loadAllUsers();
+    const snap=await S.db.collection('examData').limit(1).get(); // just check if collection exists
+    const countSnap=await S.db.collection('examData').get();
+    const el=document.getElementById('adStats'); if(!el) return;
+    el.innerHTML=`<div class="grid-2">
+      <div class="stat-card"><div class="s-label">Total Users</div><div class="s-val">${users.length}</div><div class="s-sub">accounts</div></div>
+      <div class="stat-card"><div class="s-label">Data Entries</div><div class="s-val">${countSnap.size}</div><div class="s-sub">records</div></div>
+      <div class="stat-card"><div class="s-label">Departments</div><div class="s-val">${S.departments.length}</div></div>
+      <div class="stat-card"><div class="s-label">Sessions</div><div class="s-val">${SESSIONS.length}</div></div>
+    </div>`;
+  }catch(e){}
+}
+
+// ─────────────────────────────────────────────
+// MODALS
+// ─────────────────────────────────────────────
+function renderModal() {
+  const m=S.modal;
+  let body='';
+  if(m.type==='createAdmin') body=`
+    <div class="modal-header"><h3>Create First Admin Account</h3><button class="modal-close" id="mClose">✕</button></div>
+    <div class="alert alert-warning">⚠️ Make sure Firebase Authentication (Email/Password) is enabled in your Firebase Console.</div>
+    <div id="caMsg"></div>
+    <div class="form-group" style="margin-bottom:10px"><label>Your Name *</label><input id="caName" placeholder="School Administrator" /></div>
+    <div class="form-group" style="margin-bottom:10px"><label>Email Address *</label><input type="email" id="caEmail" placeholder="admin@school.edu" /></div>
+    <div class="form-group" style="margin-bottom:16px"><label>Password *</label><input type="password" id="caPass" placeholder="Min 6 characters" /></div>
+    <div class="btn-group"><button class="btn btn-primary" id="caBtn">Create Admin Account</button><button class="btn btn-outline" id="mClose2">Cancel</button></div>`;
+  else if(m.type==='addUser') body=`
+    <div class="modal-header"><h3>Add New User</h3><button class="modal-close" id="mClose">✕</button></div>
+    <div id="auMsg"></div>
+    <div class="form-row cols-2"><div class="form-group"><label>Full Name *</label><input id="auName" /></div><div class="form-group"><label>Employee ID</label><input id="auEmp" /></div></div>
+    <div class="form-group" style="margin-bottom:10px"><label>Email *</label><input type="email" id="auEmail" /></div>
+    <div class="form-row cols-2"><div class="form-group"><label>Password *</label><input type="password" id="auPass" /></div><div class="form-group"><label>Role</label><select id="auRole"><option value="teacher">Teacher/HOD</option><option value="admin">Admin</option></select></div></div>
+    <div class="form-group" style="margin-bottom:16px"><label>Department</label><select id="auDept">${S.departments.map(d=>`<option>${d}</option>`).join('')}</select></div>
+    <div class="btn-group"><button class="btn btn-primary" id="auBtn">Create User</button><button class="btn btn-outline" id="mClose2">Cancel</button></div>`;
+  else if(m.type==='editUser') body=`
+    <div class="modal-header"><h3>Edit User — ${m.user.name||m.user.email}</h3><button class="modal-close" id="mClose">✕</button></div>
+    <div class="form-row cols-2"><div class="form-group"><label>Full Name</label><input id="euName" value="${m.user.name||''}" /></div><div class="form-group"><label>Employee ID</label><input id="euEmp" value="${m.user.employeeId||''}" /></div></div>
+    <div class="form-row cols-2">
+      <div class="form-group"><label>Role</label><select id="euRole"><option value="teacher"${m.user.role==='teacher'?' selected':''}>Teacher/HOD</option><option value="admin"${m.user.role==='admin'?' selected':''}>Admin</option></select></div>
+      <div class="form-group"><label>Department</label><select id="euDept">${S.departments.map(d=>`<option${d===m.user.department?' selected':''}>${d}</option>`).join('')}</select></div>
+    </div>
+    <div class="btn-group" style="margin-top:4px"><button class="btn btn-primary" id="euBtn">Save Changes</button><button class="btn btn-outline" id="mClose2">Cancel</button></div>`;
+  else if(m.type==='addDept') body=`
+    <div class="modal-header"><h3>Add New Department</h3><button class="modal-close" id="mClose">✕</button></div>
+    <div class="form-group" style="margin-bottom:16px"><label>Department Name *</label><input id="dName" placeholder="e.g. Computer Science" /></div>
+    <div class="btn-group"><button class="btn btn-primary" id="adBtn">Add Department</button><button class="btn btn-outline" id="mClose2">Cancel</button></div>`;
+  return `<div class="modal-bg" id="mBg"><div class="modal">${body}</div></div>`;
+}
+function bindModal() {
+  const close=()=>{ S.modal=null; render(); };
+  document.getElementById('mClose')?.addEventListener('click',close);
+  document.getElementById('mClose2')?.addEventListener('click',close);
+  document.getElementById('mBg')?.addEventListener('click',e=>{ if(e.target.id==='mBg') close(); });
+  const m=S.modal;
+  if(m.type==='createAdmin'){
+    document.getElementById('caBtn')?.addEventListener('click',async()=>{
+      const n=document.getElementById('caName').value.trim();
+      const e=document.getElementById('caEmail').value.trim();
+      const p=document.getElementById('caPass').value;
+      const msg=document.getElementById('caMsg');
+      try{
+        const cred=await S.auth.createUserWithEmailAndPassword(e,p);
+        await saveUserDoc(cred.user.uid,{name:n,email:e,role:'admin',department:'All',createdAt:new Date().toISOString()});
+        S.user=cred.user; S.userDoc={name:n,email:e,role:'admin',department:'All'};
+        S.modal=null; render();
+      }catch(err){if(msg)msg.innerHTML=`<div class="alert alert-danger">❌ ${err.message}</div>`;}
+    });
+  }
+  if(m.type==='addUser'){
+    document.getElementById('auBtn')?.addEventListener('click',async()=>{
+      const n=document.getElementById('auName').value.trim();
+      const emp=document.getElementById('auEmp').value.trim();
+      const e=document.getElementById('auEmail').value.trim();
+      const p=document.getElementById('auPass').value;
+      const role=document.getElementById('auRole').value;
+      const dept=document.getElementById('auDept').value;
+      const msg=document.getElementById('auMsg');
+      try{
+        const cred=await S.auth.createUserWithEmailAndPassword(e,p);
+        await saveUserDoc(cred.user.uid,{name:n,employeeId:emp,email:e,role,department:dept,createdAt:new Date().toISOString()});
+        S.modal=null; render();
+      }catch(err){if(msg)msg.innerHTML=`<div class="alert alert-danger">❌ ${err.message}</div>`;}
+    });
+  }
+  if(m.type==='editUser'){
+    document.getElementById('euBtn')?.addEventListener('click',async()=>{
+      const updates={name:document.getElementById('euName').value.trim(),employeeId:document.getElementById('euEmp').value.trim(),role:document.getElementById('euRole').value,department:document.getElementById('euDept').value};
+      await S.db.collection('users').doc(m.user.id).update(updates);
+      S.modal=null; render();
+    });
+  }
+  if(m.type==='addDept'){
+    document.getElementById('adBtn')?.addEventListener('click',async()=>{
+      const n=document.getElementById('dName').value.trim();
+      if(!n){alert('Enter a department name.');return;}
+      if(S.departments.includes(n)){alert('Department already exists.');return;}
+      S.departments.push(n); await saveDepartments(); S.modal=null; render();
+    });
+  }
+}
+
+// ─────────────────────────────────────────────
+// BOOT
+// ─────────────────────────────────────────────
+bootFirebase();
+</script>
+</body>
+</html>
